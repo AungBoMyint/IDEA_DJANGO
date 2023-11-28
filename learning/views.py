@@ -27,6 +27,9 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     ).all()
     serializer_class = serializers.CategorySerializer
     filter_backends = [DjangoFilterBackend]
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
     
 
 class SubCategoryViewSet(ReadOnlyModelViewSet):
@@ -34,12 +37,18 @@ class SubCategoryViewSet(ReadOnlyModelViewSet):
         topics_count = Count("topics")
     ).all()
     serializer_class = serializers.SubCategorySerializer
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 class TopicViewSet(ReadOnlyModelViewSet):
     queryset = models.Topic.objects.annotate(
         courses_count = Count('courses')
     ).all()
     serializer_class = serializers.TopicSerializer
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 class CourseViewSet(RetrieveModelMixin,UpdateModelMixin,ListModelMixin,GenericViewSet):
     
@@ -81,6 +90,9 @@ class DiscountViewSet(ReadOnlyModelViewSet):
         "discount_items__course__sections"
         ).all()
     serializer_class = serializers.DiscountSerializer
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 class SubSectionViewSet(ReadOnlyModelViewSet):
     queryset = models.SubSection.objects.prefetch_related("video") \
@@ -88,6 +100,9 @@ class SubSectionViewSet(ReadOnlyModelViewSet):
     .prefetch_related("pdf") \
     .all()
     serializer_class = serializers.SubSectionSerializer
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 class SliderViewSet(ReadOnlyModelViewSet):
     queryset = models.Slider.objects.prefetch_related(
@@ -97,17 +112,25 @@ class SliderViewSet(ReadOnlyModelViewSet):
         "youtube"
     ).all()
     serializer_class = serializers.SliderSerializer
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericViewSet):
     queryset = models.Student.objects.select_related('user').all()
     serializer_class = serializers.StudentSerializer
+
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
     def get_serializer_context(self):
         return {'user_id':self.request.user.id}
     
     @action(detail=False,methods=['GET'])
     def enrolled_courses(self,request):
-        enrollment = models.EnrollStudents.objects.filter(student__user__id=request.user.id)
+        enrollment = models.EnrollStudents.objects.filter(student__user__id=request.user.id) \
+        .prefetch_related('course')
         serializer = serializers.EnrollCourseSerializer(enrollment,many=True)
         return Response(serializer.data)
 
@@ -128,6 +151,10 @@ class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
     queryset = models.Enrollment.objects.prefetch_related('enroll_students').all()
     serializer_class = serializers.EnrollmentSerializer
     permission_classes = [IsAuthenticated]
+
+    @method_decorator(cache_page(5 * 60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         #check enroll_students is empty or not

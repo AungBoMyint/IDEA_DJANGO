@@ -77,7 +77,6 @@ class EnrollmentAdmin(admin.ModelAdmin):
 
     @admin.display()
     def total_income(self,enroll:models.Enrollment):
-        print(f'{enroll.enroll_students.all()}')
         total = '{:,}'.format(sum(en_stu.course.price for en_stu in enroll.enroll_students.all()))
         return  f'{total} Ks'
 
