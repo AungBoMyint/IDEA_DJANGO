@@ -110,6 +110,7 @@ class DiscountItemForm(forms.ModelForm):
     )
 
 
+
 @admin.register(models.DiscountItem)
 class DiscountItemAdmin(admin.ModelAdmin):
     list_display = ["course","discount"]
@@ -119,8 +120,7 @@ class DiscountItemAdmin(admin.ModelAdmin):
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         return super().get_queryset(request).select_related("course") \
         .prefetch_related("discount")
-    
-    
+   
 
 @admin.register(models.Discount)
 class DiscountAdmin(admin.ModelAdmin):
@@ -295,7 +295,7 @@ class CourseAdmin(nested_admin.NestedModelAdmin):
     autocomplete_fields = ['topic']
     list_display_links = ['title']
     list_per_page = 10
-    inlines = [SectionInline]
+    #inlines = [SectionInline]
 
     @admin.display()
     def discount_price(self,course:models.Course):
