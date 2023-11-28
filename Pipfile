@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+mysqlclient = "*"
+djangorestframework = "*"
+django-debug-toolbar = "*"
+drf-nested-routers = "*"
+djoser = "*"
+djangorestframework-jwt = "*"
+djangorestframework-simplejwt = "*"
+django-filter = "*"
+setuptools = "*"
+django-nested-admin = "*"
+pillow = "*"
+moviepy = "*"
+pypdf2 = "*"
+redis = "*"
+django-redis = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
