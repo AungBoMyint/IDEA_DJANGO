@@ -10,14 +10,15 @@ class CourseFilter(FilterSet):
     ratings_lt = django_filters.NumberFilter(field_name='ratings_avg',lookup_expr='lt',label="Rating Less Than")
     reviews_gt = django_filters.NumberFilter(field_name="reviews_count",lookup_expr='gt',label='Reviews Greater than')
     reviews_lt = django_filters.NumberFilter(field_name='reviews_count',lookup_expr='lt',label='Reviews Less than')
-    category = django_filters.CharFilter(field_name='category_id',method='filter_category',lookup_expr='exact',label="Filter with category")
-    def filter_category(self,queryset,name,value):
-        if value is None:
-            return queryset
-        else:
-            subcategory_id = models.SubCategory.objects.filter(category_id=value)
-            topic_id = models.Topic.objects.filter(subcategory_id__in=subcategory_id)
-            return queryset.filter(topic_id__in=topic_id)
+    #category = django_filters.CharFilter(field_name='category_id',method='filter_category',lookup_expr='exact',label="Filter with category")
+    
+    # def filter_category(self,queryset,name,value):
+    #     if value is None:
+    #         return queryset
+    #     else:
+    #         subcategory_id = models.SubCategory.objects.filter(category_id=value)
+    #         topic_id = models.Topic.objects.filter(subcategory_id__in=subcategory_id)
+    #         return queryset.filter(topic_id__in=topic_id)
     def students_gt(self,queryset,name,value):
             lookup = '__'.join([name, 'gt'])
             return queryset.filter(**{lookup: value})
@@ -29,7 +30,7 @@ class CourseFilter(FilterSet):
     class Meta:
         model = Course
         fields = {
-            'topic_id': ['exact'],
+            'category_id': ['exact'],
             'price': ['lt','gt'],
         }
         filterset_fields = {

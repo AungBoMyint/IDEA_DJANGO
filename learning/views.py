@@ -21,42 +21,41 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 # Create your views here.
 class CategoryViewSet(ReadOnlyModelViewSet):
-    queryset = models.Category.objects.annotate(
-        subcategories_count = Count('subcategories',distinct=True),
-        subcategories_topics_count = Count("subcategories__topics",distinct=True)
-    ).all()
+    queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
     filter_backends = [DjangoFilterBackend]
+
     @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
     
 
-class SubCategoryViewSet(ReadOnlyModelViewSet):
-    queryset = models.SubCategory.objects.annotate(
-        topics_count = Count("topics")
-    ).all()
-    serializer_class = serializers.SubCategorySerializer
-    @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+# class SubCategoryViewSet(ReadOnlyModelViewSet):
+#     queryset = models.SubCategory.objects.annotate(
+#         topics_count = Count("topics")
+#     ).all()
+#     serializer_class = serializers.SubCategorySerializer
+#     @method_decorator(cache_page(5 * 60))
+#     def dispatch(self, request, *args, **kwargs):
+#         return super().dispatch(request, *args, **kwargs)
 
-class TopicViewSet(ReadOnlyModelViewSet):
-    queryset = models.Topic.objects.annotate(
-        courses_count = Count('courses')
-    ).all()
-    serializer_class = serializers.TopicSerializer
-    @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+# class TopicViewSet(ReadOnlyModelViewSet):
+#     queryset = models.Topic.objects.annotate(
+#         courses_count = Count('courses')
+#     ).all()
+#     serializer_class = serializers.TopicSerializer
+#     @method_decorator(cache_page(5 * 60))
+#     def dispatch(self, request, *args, **kwargs):
+#         return super().dispatch(request, *args, **kwargs)
 
-class CourseViewSet(RetrieveModelMixin,UpdateModelMixin,ListModelMixin,GenericViewSet):
+class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
     
     serializer_class = serializers.CourseSerializer
     filter_backends = [DjangoFilterBackend,SearchFilter]
     filterset_class = filters.CourseFilter
     search_fields = ["title"]
 
+    
     #---------------------For Caching-----------
     @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
@@ -69,16 +68,23 @@ class CourseViewSet(RetrieveModelMixin,UpdateModelMixin,ListModelMixin,GenericVi
     .annotate(
         enroll_students_count=Count('enroll_students',distinct=True),
         ratings_avg = Avg('ratings__rating',distinct=True),
-        reviews_count = Count('reviews',distinct=True)
+        reviews_count = Count('reviews',distinct=True),
+        total_subsections = Count('sections__subsections',distinct=True),
+        videos_count = Count("sections__subsections__video",distinct=True),
+        pdfs_count = Count("sections__subsections__pdf",distinct=True),
+        blogs_count = Count("sections__subsections__blog",distinct=True)
         ) \
     .prefetch_related('ratings') \
     .prefetch_related('reviews') \
     .select_related('discount_item__discount') \
     .prefetch_related('enroll_students__student__user') \
-    .prefetch_related('topic__subcategory') \
+    .prefetch_related('category') \
     .prefetch_related('sections__subsections__video') \
     .prefetch_related('sections__subsections__blog') \
-    .prefetch_related('sections__subsections__pdf').all()
+    .prefetch_related('sections__subsections__pdf') \
+    .prefetch_related('sections__subsections__complete_subsections') \
+    .all()
+    
         
 
 class DiscountViewSet(ReadOnlyModelViewSet):
@@ -109,7 +115,8 @@ class SliderViewSet(ReadOnlyModelViewSet):
         "messengerlink",
         "courselink",
         "facebooklink",
-        "youtube"
+        "youtube",
+        "blogs"
     ).all()
     serializer_class = serializers.SliderSerializer
     @method_decorator(cache_page(5 * 60))
@@ -119,6 +126,7 @@ class SliderViewSet(ReadOnlyModelViewSet):
 class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericViewSet):
     queryset = models.Student.objects.select_related('user').all()
     serializer_class = serializers.StudentSerializer
+    permission_classes = [IsAuthenticated]
 
     @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
@@ -127,17 +135,19 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
     def get_serializer_context(self):
         return {'user_id':self.request.user.id}
     
-    @action(detail=False,methods=['GET'])
+    @action(detail=False,methods=['GET'],permission_classes=[IsAuthenticated])
     def enrolled_courses(self,request):
-        enrollment = models.EnrollStudents.objects.filter(student__user__id=request.user.id) \
-        .prefetch_related('course')
+        enrollment = get_list_or_404(models.EnrollStudents.objects.filter(student__user__id=request.user.id) \
+        .prefetch_related('course'))
+
+        
         serializer = serializers.EnrollCourseSerializer(enrollment,many=True)
         return Response(serializer.data)
 
     @action(detail=False,methods=['GET','PUT'],permission_classes=[IsAuthenticated])
     def me(self,request):
         if request.method == 'GET':
-            student = models.Student.objects.get(user_id=request.user.id)
+            student =get_object_or_404(models.Student,user_id=request.user.id)
             serializer = serializers.StudentSerializer(student)
             return Response(serializer.data)
         elif request.method == 'PUT':
@@ -146,6 +156,7 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+        
 
 class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
     queryset = models.Enrollment.objects.prefetch_related('enroll_students').all()
@@ -161,6 +172,13 @@ class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
         enroll_students = request.data.get("enroll_students",[])
         if len(enroll_students) < 1:
             return Response({"enroll_students":"Enroll Students shouldn't be empty"},status=status.HTTP_400_BAD_REQUEST)
+        #if there has enroll_students already with course_id & user_id
+        #then we remove this course_id
+        for course_id in enroll_students:
+            ifExist = models.EnrollStudents.objects.filter(course_id=course_id,student_id = request.user.student.id).first()
+            if ifExist:
+                course = models.Course.objects.get(pk=course_id)
+                return Response(data=f'You have already enrolled this {course.title}',status=status.HTTP_400_BAD_REQUEST)
         #if not empty
         with transaction.atomic():
             #first we save Enrollment

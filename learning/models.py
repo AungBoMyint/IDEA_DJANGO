@@ -2,29 +2,31 @@ from django.db import models
 from django.conf.global_settings import AUTH_USER_MODEL
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
+from ckeditor.fields import RichTextField
+from test_learning.storage_backends import PublicMediaStorage
 # Create your models here.
 class Category(models.Model):
-    image = models.ImageField(upload_to='images/',null=True)
+    image = models.ImageField(upload_to='images/',null=True,storage=PublicMediaStorage())
     title = models.CharField(max_length=255)
 
     def __str__(self) -> str:
         return self.title
 
-class SubCategory(models.Model):
-    image = models.ImageField(upload_to='images/',null=True)
-    title = models.CharField(max_length=255)
-    category = models.ForeignKey(Category,on_delete=models.CASCADE,related_name="subcategories")
+# class SubCategory(models.Model):
+#     image = models.ImageField(upload_to='images/',null=True)
+#     title = models.CharField(max_length=255)
+#     category = models.ForeignKey(Category,on_delete=models.CASCADE,related_name="subcategories")
 
-    def __str__(self) -> str:
-        return self.title
+#     def __str__(self) -> str:
+#         return self.title
 
-class Topic(models.Model):
-    image = models.ImageField(upload_to='images/',null=True)
-    title = models.CharField(max_length=255)
-    subcategory = models.ForeignKey(SubCategory,on_delete=models.CASCADE,related_name="topics")
+# class Topic(models.Model):
+#     image = models.ImageField(upload_to='images/',null=True)
+#     title = models.CharField(max_length=255)
+#     subcategory = models.ForeignKey(SubCategory,on_delete=models.CASCADE,related_name="topics")
 
-    def __str__(self) -> str:
-        return self.title
+#     def __str__(self) -> str:
+#         return self.title
 
 class Student(models.Model):
     BROWN = 'B'
@@ -48,7 +50,7 @@ class Course(models.Model):
     title = models.CharField(max_length=255)
     desc = models.TextField(null=True)
     price = models.IntegerField()
-    topic = models.ForeignKey(Topic,on_delete=models.SET_NULL,null=True,related_name="courses")
+    category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True,related_name="courses")
     def __str__(self) -> str:
         return self.title
 
@@ -155,13 +157,15 @@ class Pdf(models.Model):
     subsection = models.OneToOneField(SubSection,on_delete=models.CASCADE,related_name="pdf",null=True)
 
     def __str__(self) -> str:
-        return self.pdf_url.path
+        return self.pdf_url.name
 #-----------######------######----End------######---------######--------------------------------------------------------------
 
 #---------------------------------Slider Related Model--------------------------------------------------------------------
 class Slider(models.Model):
     image = models.ImageField(upload_to="images/")
     created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self) -> str:
+        return f'{self.created_at}'
     
 
 class MessengerLink(models.Model):
@@ -187,4 +191,14 @@ class CourseLink(models.Model):
     slider = models.OneToOneField(Slider,on_delete=models.CASCADE)
     def __str__(self) -> str:
         return self.slider.image.url
+    
+class BlogLink(models.Model):
+    body = RichTextField()
+    image = models.ImageField(upload_to='images/')
+    slider = models.ForeignKey(Slider,on_delete=models.CASCADE,related_name="blogs")
+
 #--------------------------------------------End---------------------------------------------------------------------------
+#----------------For User's Progress------
+class CompleteSubSection(models.Model):
+    section = models.ForeignKey(SubSection,on_delete=models.CASCADE,related_name="complete_subsections")
+    student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name="complete_subsections")

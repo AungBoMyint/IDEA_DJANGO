@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '10.0.2.2',
-    '127.0.0.1'
+    '127.0.0.1',
 ]
 
 
@@ -48,7 +48,9 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_simplejwt',
     'django_filters',
-    'nested_admin'
+    'nested_admin',
+    'ckeditor',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -169,8 +171,27 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/1",
+        "TIMEOUT": 5,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
 }
+
+
+AWS_ACCESS_KEY_ID = 'DO00WGQZGGRM2MLDBUQU'
+AWS_SECRET_ACCESS_KEY = 'NyvFsXju2WoeLmspMaVQyS7uEilB1EK+tFAK7PeRAUk'
+AWS_STORAGE_BUCKET_NAME = 'api-media'
+AWS_S3_ENDPOINT_URL = 'https://learn-ease.sgp1.digitaloceanspaces.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
+DEFAULT_FILE_STORAGE = 'test_learning.storage_backends.PublicMediaStorage'
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
+#STATIC_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+#STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+#DEFAULT_FILE_STORAGE = 'learning.storage_backends.PublicMediaStorage'

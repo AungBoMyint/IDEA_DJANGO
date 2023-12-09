@@ -23,21 +23,26 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = '__all__'
     user = SimpleUserSerializer(read_only=True)
 
+    def create(self, validated_data):
+        user_id = self.context.get('user_id')
+        instance = models.Student.objects.create(user_id=user_id,**validated_data)
+        return instance
+
     
 
 
 
-class TopicSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Topic
-        fields = ["id","title","image",'subcategory',"courses_count"]
-    courses_count = serializers.IntegerField(read_only=True)
+# class TopicSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.Topic
+#         fields = ["id","title","image",'subcategory',"courses_count"]
+#     courses_count = serializers.IntegerField(read_only=True)
 
-class SubCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.SubCategory
-        fields = ["id","title","image","category","topics_count"]
-    topics_count = serializers.IntegerField(read_only=True)
+# class SubCategorySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.SubCategory
+#         fields = ["id","title","image","category","topics_count"]
+#     topics_count = serializers.IntegerField(read_only=True)
 
 
 
@@ -103,13 +108,28 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
-        fields = ["id","title","image","desc","price","discount_price","enroll_students_count","ratings_avg","reviews_count","is_enrolled","topic","enroll_students","sections"]
+        fields = ["id","title","image","desc","price","discount_price","enroll_students_count","ratings_avg","reviews_count","is_enrolled","total_subsections","progress","category","videos","pdfs","blogs","enroll_students","sections"]
+    enroll_students = EnrollStudentSerializer(many=True)
     sections = SectionSerializer(many=True)
     enroll_students_count = serializers.IntegerField()
-    enroll_students = EnrollStudentSerializer(many=True)
-    topic = serializers.CharField()
+    category = serializers.CharField()
     reviews_count = serializers.IntegerField()
     ratings_avg = serializers.DecimalField(max_digits=2,decimal_places=1)
+    total_subsections = serializers.IntegerField()
+    progress= serializers.IntegerField()
+    videos = serializers.SerializerMethodField(
+        method_name="get_videos",
+    )
+    pdfs = serializers.SerializerMethodField(
+        method_name="get_pdfs",
+    )
+    blogs = serializers.SerializerMethodField(
+        method_name="get_blogs",
+    )
+
+    progress = serializers.SerializerMethodField(
+        method_name="get_progress",
+    )
 
     discount_price = serializers.SerializerMethodField(
         method_name='get_discount_price'
@@ -117,6 +137,28 @@ class CourseSerializer(serializers.ModelSerializer):
     is_enrolled = serializers.SerializerMethodField(
         method_name='check_is_enrolled'
     )
+
+    def get_videos(self,course:models.Course):
+        return course.videos_count
+    def get_pdfs(self,course:models.Course):
+        return course.pdfs_count
+    def get_blogs(self,course:models.Blog):
+        return course.blogs_count
+
+    def get_progress(self,course:models.Course):
+        total_sections = course.total_subsections
+        complete_sections = 0
+        try:
+            complete_sections = models.CompleteSubSection.objects.filter(
+            section__section__course= course.id,
+            student_id = models.Student.objects.get(user_id = self.context["user_id"]).id
+            ).count()
+        except:
+            print("Exception getting progress")
+        if(total_sections <= 0):
+            return 0
+        return (complete_sections/total_sections) * 100
+
     def get_discount_price(self,course:models.Course):
         original_amount = course.price
         discount_amount = 0
@@ -127,8 +169,12 @@ class CourseSerializer(serializers.ModelSerializer):
             return 0
     def check_is_enrolled(self,course:models.Course):
         #enroll_students = models.EnrollStudents.objects.prefetch_related('student__user').filter(course_id = course.id)
-        user_list = [enrollment.student.user.id for enrollment in course.enroll_students.all()]
-        return self.context.get('user_id') in user_list
+        try:
+            user_list = [enrollment.student.user.id for enrollment in course.enroll_students.all()]
+            return self.context.get('user_id') in user_list
+        except:
+            return False
+
 
 class DiscountItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -159,12 +205,18 @@ class CourseLinkSerializer(serializers.ModelSerializer):
         model = models.CourseLink
         fields = ['course']
     course = SimpleCourseSerializer(many=True)
+class BlogLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.BlogLink
+        fields = '__all__'
+
 class SliderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Slider
-        fields = ["id","image","created_at","messengerlink","facebooklink","youtube","courselink"]
+        fields = ["id","image","created_at","messengerlink","facebooklink","youtube","courselink","blogs"]
     messengerlink = MessengerSerializer()
     facebooklink = FacebookSerializer()
     youtube = YoutubeSerializer()
     courselink = CourseLinkSerializer()
+    blogs = BlogLinkSerializer(many=True)
 

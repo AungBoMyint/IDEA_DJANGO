@@ -1,6 +1,9 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 from django import forms
+from tempfile import NamedTemporaryFile
+from .forms import BlogLinkForm
+from django.core.files.storage import default_storage
 import pprint
 import re
 from django.db import models as base_models
@@ -27,42 +30,42 @@ from django.forms.models import BaseInlineFormSet, ModelChoiceField
 
 @admin.register(models.Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['title','subcategories']
+    list_display = ['title','image']
    
     search_fields = ['title']
     list_per_page = 10
     list_display_links = ['title']
     
-    @admin.display()
-    def subcategories(self,category:models.Category):
-        url = (reverse('admin:learning_subcategory_changelist')
-               + '?' + urlencode({'category_id': category.id}))
-        return format_html('<a href="{}">{}</a>',url,category.subcategories_count)
+    # @admin.display()
+    # def subcategories(self,category:models.Category):
+    #     url = (reverse('admin:learning_subcategory_changelist')
+    #            + '?' + urlencode({'category_id': category.id}))
+    #     return format_html('<a href="{}">{}</a>',url,category.subcategories_count)
 
-    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
-        return super().get_queryset(request).annotate(
-            subcategories_count = Count('subcategories')
-        )
+    # def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+    #     return super().get_queryset(request).annotate(
+    #         subcategories_count = Count('subcategories')
+    #     )
 
-@admin.register(models.SubCategory)
-class SubCategoryAdmin(admin.ModelAdmin):
-    list_display = ["title","category"]
-    list_editable = ["title"]
-    list_per_page = 10
-    list_display_links = None
-    autocomplete_fields = ["category"]
-    search_fields = ["title"]
+# @admin.register(models.SubCategory)
+# class SubCategoryAdmin(admin.ModelAdmin):
+#     list_display = ["title","category"]
+#     list_editable = ["title"]
+#     list_per_page = 10
+#     list_display_links = None
+#     autocomplete_fields = ["category"]
+#     search_fields = ["title"]
 
-@admin.register(models.Topic)
-class TopicAdminPanel(admin.ModelAdmin):
-    list_display = ["title","subcategory"]
-    list_editable = ["title","subcategory"]
-    list_display_links = None
-    list_per_page = 10
-    search_fields = ["title"]
+# @admin.register(models.Topic)
+# class TopicAdminPanel(admin.ModelAdmin):
+#     list_display = ["title","subcategory"]
+#     list_editable = ["title","subcategory"]
+#     list_display_links = None
+#     list_per_page = 10
+#     search_fields = ["title"]
 
-    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
-        return super().get_queryset(request).prefetch_related('subcategory')
+#     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+#         return super().get_queryset(request).prefetch_related('subcategory')
 
 @admin.register(models.Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -184,17 +187,29 @@ class VideoAdmin(admin.ModelAdmin):
 
         # Calculate duration and save it
         try:
-            video_path = obj.video_url.path
-            clip = VideoFileClip(video_path)
+            video_path = obj.video_url.name
+            video_file = default_storage.open(video_path)
+            with NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(video_file.read())
+
+            # Use the temporary file path for VideoFileClip
+            clip = VideoFileClip(temp_file.name)
             duration = clip.duration
-            obj.duration = f'{round(duration)}s'  # Store duration as a string
+            obj.duration = f'{round(duration)}s' if duration else '0s'  # Handle empty duration
             obj.save()
+
+            # Delete the temporary file after processing
+            temp_file.close()
         except Exception as e:
             print(f"Error: {e}")
     @admin.display()
-    def duration_(self,video:models.Video):
-        time_int = int(video.duration.replace('s', ''))
-        return format_duration(time_int)
+    def duration_(self, video):
+        try:
+            time_int = int(video.duration.replace('s', '')) if video.duration else 0  # Handle empty duration
+            return format_duration(time_int)
+        except ValueError:
+            return 'Invalid Duration'
+        
     @admin.display()
     def subsection(self,video:models.Video):
         return video.subsection
@@ -218,8 +233,13 @@ class PdfAdmin(admin.ModelAdmin):
 
     def save_model(self, request: Any, obj: Any, form: Any, change: Any) -> None:
         super().save_model(request, obj, form, change)
-        obj.duration = get_pdf_reading_time(obj.pdf_url.path)
+        pdf_path = obj.pdf_url.name
+        pdf_file = default_storage.open(pdf_path)
+        with NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(pdf_file.read())
+        obj.duration = get_pdf_reading_time(temp_file.name)
         obj.save()
+        temp_file.close()
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         return super().get_queryset(request) \
@@ -234,6 +254,9 @@ class PdfAdmin(admin.ModelAdmin):
 class VideoInline(nested_admin.NestedStackedInline):
     model = models.Video
     extra = 0
+    def save_model(self, request, obj, form, change):
+        print("Calling save model")
+        obj.save()
 class BlogInline(nested_admin.NestedStackedInline):
     model = models.Blog
     extra = 0
@@ -242,7 +265,7 @@ class PdfInline(nested_admin.NestedStackedInline):
     extra = 0
 
 @admin.register(models.SubSection)
-class SubSectionAdmin(admin.ModelAdmin):
+class SubSectionAdmin(nested_admin.NestedModelAdmin):
     search_fields = ["title"]
     list_display = ["title","section","course","videos"]
     inlines = [VideoInline,BlogInline,PdfInline]
@@ -255,11 +278,15 @@ class SubSectionAdmin(admin.ModelAdmin):
             "<a href={}>{}</a>",
             ((reverse('admin:learning_video_changelist'),v.video_url) for v in vid)
         )
-    
    
     @admin.display()
     def course(self,subsection:models.SubSection):
         return subsection.section.course
+    def save_model(self, request, obj:models.SubSection, form, change):
+        subsection = obj.save()
+    
+    
+    
 ######
 class SubSectionInline(nested_admin.NestedStackedInline):
     model = models.SubSection
@@ -289,9 +316,9 @@ class SectionAdmin(nested_admin.NestedModelAdmin):
 #--------------------------#
 @admin.register(models.Course)
 class CourseAdmin(nested_admin.NestedModelAdmin):
-    list_display = ["title","price","reviews_count","ratings_avg","enroll_students","topic","discount_price"]
+    list_display = ["title","price","reviews_count","ratings_avg","enroll_students","category","discount_price"]
     search_fields = ['title']
-    autocomplete_fields = ['topic']
+    autocomplete_fields = ['category']
     list_display_links = ['title']
     list_per_page = 10
     #inlines = [SectionInline]
@@ -318,7 +345,7 @@ class CourseAdmin(nested_admin.NestedModelAdmin):
         return format_html("<a href='{}'>{}</a>",url,course.enroll_students_count)
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
         return super().get_queryset(request) \
-        .select_related('topic') \
+        .select_related('category') \
         .prefetch_related('ratings') \
         .prefetch_related('sections__subsections__video') \
         .prefetch_related('sections__subsections__blog') \
@@ -341,6 +368,10 @@ class YoutubeLinkInline(nested_admin.NestedStackedInline):
 class CourseLinkInline(nested_admin.NestedStackedInline):
     model = models.CourseLink
     extra = 0
+
+@admin.register(models.BlogLink)
+class BlogLinkAdmin(admin.ModelAdmin):
+    form = BlogLinkForm
 
 @admin.register(models.Slider)
 class SliderAdmin(nested_admin.NestedModelAdmin):

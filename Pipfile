@@ -20,6 +20,10 @@ moviepy = "*"
 pypdf2 = "*"
 redis = "*"
 django-redis = "*"
+install = "*"
+django-ckeditor = "*"
+boto3 = "*"
+django-storages = "*"
 
 [dev-packages]
 
