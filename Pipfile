@@ -24,6 +24,7 @@ install = "*"
 django-ckeditor = "*"
 boto3 = "*"
 django-storages = "*"
+django-rest-passwordreset = "*"
 
 [dev-packages]
 
