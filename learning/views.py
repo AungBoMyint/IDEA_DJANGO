@@ -19,6 +19,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view,permission_classes
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from .signals import enrollment as enrollment_signal
 # Create your views here.
 class CategoryViewSet(ReadOnlyModelViewSet):
     queryset = models.Category.objects.all()
@@ -194,4 +195,11 @@ class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
                 
             #then return enrollment
         serializer = serializers.EnrollmentSerializer(enrollment)
+        courses = models.Course.objects.filter(id__in=enroll_students).values("title")
+        enrollment_signal.send_robust(self.__class__,data={
+            "email": request.user.email,
+            "student": request.user.username,
+            "courses":courses,
+
+        })
         return Response(serializer.data)

@@ -6,4 +6,4 @@ class LearningConfig(AppConfig):
     name = 'learning'
 
     def ready(self) -> None:
-        import learning.signals
+        import learning.signals.signals

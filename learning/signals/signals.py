@@ -1,11 +1,9 @@
-
 from django.core.mail import EmailMultiAlternatives
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.urls import reverse
-
+from learning.signals import enrollment
 from django_rest_passwordreset.signals import reset_password_token_created
-
 
 @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
@@ -47,3 +45,29 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
     msg.send()
                  
 
+@receiver(enrollment)
+def enrolled_email_to_admin(sender,**kwargs):
+    student_email = kwargs["data"]["email"]
+    # send an e-mail to the user
+    context = {
+        'student': kwargs["data"]["student"],
+        'courses':kwargs["data"]["courses"],
+        'enrollment_url': "http://127.0.0.1:8000/admin/learning/enrollment/",
+    }
+
+    # render email text
+    email_html_message = render_to_string('email/enrolled_courses.html', context)
+    email_plaintext_message = render_to_string('email/enrolled_courses.txt', context)
+
+    msg = EmailMultiAlternatives(
+        # title:
+        "Student enrolled new courses",
+        # message:
+        email_plaintext_message,
+        # from:
+        student_email,
+        # to:
+        ["truelife787799@gmail.com"]
+    )
+    msg.attach_alternative(email_html_message, "text/html")
+    msg.send()

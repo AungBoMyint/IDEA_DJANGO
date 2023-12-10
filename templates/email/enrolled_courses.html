@@ -1,0 +1,19 @@
+<!-- mydrfproject/templates/email/password_reset_email.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New enrollment</title>
+</head>
+<body>
+    <p>Hello Admin,</p>
+    <p>{{student}} is enrolled new courses: </p>
+    <ol>
+        {% for course_name in courses %}
+          <li>{{course_name.title}}</li>
+        {% endfor %}
+    </ol>
+    <p><a href="{{ enrollment_url }}">Go to enrollments</a></p>
+    
+</body>
+</html>
