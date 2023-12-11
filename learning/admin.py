@@ -1,6 +1,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 from django import forms
+from django.utils.html import mark_safe
 from tempfile import NamedTemporaryFile
 from .forms import BlogLinkForm
 from django.core.files.storage import default_storage
@@ -30,11 +31,15 @@ from django.forms.models import BaseInlineFormSet, ModelChoiceField
 
 @admin.register(models.Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['title','image']
+    list_display = ['title','image_']
    
     search_fields = ['title']
     list_per_page = 10
     list_display_links = ['title']
+
+    @admin.display()
+    def image_(self,category:models.Category):
+        return mark_safe(f'<img src = "https://learn-ease.sgp1.digitaloceanspaces.com/api-media/media/public/{category.image.name}" width = "80" height = "80" style="object-fit: contain;"/>')
     
     # @admin.display()
     # def subcategories(self,category:models.Category):
@@ -69,8 +74,31 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Student)
 class StudentAdmin(admin.ModelAdmin):
+    list_display = ["avatar_","name","points","membership","enrolled_courses"]
+    fields = ["avatar",'preview',"user","points","membership"]
+    readonly_fields = ['preview']
+
+    @admin.display()
+    def avatar_(self,student:models.Student):
+        return mark_safe(f'<img src = "https://learn-ease.sgp1.digitaloceanspaces.com/api-media/media/public/{student.avatar.name}" width = "50" height = "50" style="object-fit: cover;border-radius: 50%"/>')
+    @admin.display()
+    def name(self,student:models.Student):
+        return f'{student.user.first_name} {student.user.last_name}'
+    @admin.display()
+    def enrolled_courses(self,student:models.Student):
+        return student.enroll_count
+    
     def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
-        return super().get_queryset(request).select_related('user')
+        return super().get_queryset(request) \
+         .annotate(enroll_count=Count('enroll_students')) \
+         .select_related('user')
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'avatar':
+            kwargs['widget'] = admin.widgets.AdminFileWidget(attrs={
+                'class': 'image-preview',  # Add a class for targeting with JavaScript
+            })
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+    
 
 admin.site.register(models.Review)
 
@@ -356,32 +384,32 @@ class CourseAdmin(nested_admin.NestedModelAdmin):
             ratings_avg= Avg('ratings__rating',distinct=True)
         )
 
-class FacebookLinkInline(nested_admin.NestedStackedInline):
-    model = models.FacebookLink
-    extra = 0
-class MessengerLinkInline(nested_admin.NestedStackedInline):
-    model = models.MessengerLink
-    extra = 0
-class YoutubeLinkInline(nested_admin.NestedStackedInline):
-    model = models.YoutubeLink
-    extra = 0
-class CourseLinkInline(nested_admin.NestedStackedInline):
-    model = models.CourseLink
-    extra = 0
+# class FacebookLinkInline(nested_admin.NestedStackedInline):
+#     model = models.FacebookLink
+#     extra = 0
+# class MessengerLinkInline(nested_admin.NestedStackedInline):
+#     model = models.MessengerLink
+#     extra = 0
+# class YoutubeLinkInline(nested_admin.NestedStackedInline):
+#     model = models.YoutubeLink
+#     extra = 0
+# class CourseLinkInline(nested_admin.NestedStackedInline):
+#     model = models.CourseLink
+#     extra = 0
 
-@admin.register(models.BlogLink)
-class BlogLinkAdmin(admin.ModelAdmin):
-    form = BlogLinkForm
+# @admin.register(models.BlogLink)
+# class BlogLinkAdmin(admin.ModelAdmin):
+#     form = BlogLinkForm
 
-@admin.register(models.Slider)
-class SliderAdmin(nested_admin.NestedModelAdmin):
-    list_display = ["image","messengerlink","facebooklink","youtube_link","courselink"]
+# @admin.register(models.Slider)
+# class SliderAdmin(nested_admin.NestedModelAdmin):
+    # list_display = ["image","messengerlink","facebooklink","youtube_link","courselink"]
     
-    inlines = [FacebookLinkInline,MessengerLinkInline,YoutubeLinkInline,CourseLinkInline]
+    # inlines = [FacebookLinkInline,MessengerLinkInline,YoutubeLinkInline,CourseLinkInline]
     
-    @admin.display()
-    def youtube_link(self,slider:models.Slider):
-        return format_html('<a href={}>{}</a>',slider.youtube.link,slider.youtube.link)
+    # @admin.display()
+    # def youtube_link(self,slider:models.Slider):
+    #     return format_html('<a href={}>{}</a>',slider.youtube.link,slider.youtube.link)
     
-    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
-        return super().get_queryset(request).prefetch_related("messengerlink","facebooklink","youtube","courselink")
+    # def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+    #     return super().get_queryset(request).prefetch_related("messengerlink","facebooklink","youtube","courselink")

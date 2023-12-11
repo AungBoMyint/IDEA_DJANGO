@@ -36,6 +36,10 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    # 'admin_tools_stats',
+    # 'django_nvd3',
+    'jazzmin',
+    #'admin_argon.apps.AdminArgonConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,7 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'learning',
     'rest_framework',
-    "debug_toolbar",
+    #"debug_toolbar",
     'djoser',
     'rest_framework_simplejwt',
     'django_filters',
@@ -62,7 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
+    #'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 
 ROOT_URLCONF = 'test_learning.urls'
@@ -137,7 +141,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -209,3 +215,70 @@ EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 2525
 DEFAULT_FROM_EMAIL = 'learnease@gmail.com'
+#JAZZMIN SETTINGS
+
+JAZZMIN_SETTINGS = {
+    "site_title": "LearnEase",
+    "site_header": "LearnEase",
+    "site_brand": "LearnEase",
+     "welcome_sign": "Welcome to Admin Panel",
+    "order_with_respect_to": ["auth", "learning.Category","learning.Course","learning.Section",
+                              "learning.SubSection","learning.Video","learning.Pdf","learning.Blog",
+                              "learning.Discount","learning.DiscountItem",
+                              "learning.Student","learning.Enrollment","learning.EnrollStudents",
+                              "learning.Review"],
+    "site_logo": "image/learnease-logo.png",
+     "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "learning.Category": "fas fa-layer-group",
+        "learning.Student": "fas fa-users",
+        "learning.Course":"fas fa-book-open",
+        "learning.BlogLink":"fas fa-link",
+        "learning.Blog":"fas fa-clipboard",
+        "learning.DiscountItem":"fas fa-tag",
+        "learning.Discount":"fas fa-percent",
+        "learning.EnrollStudents": "fas fa-graduation-cap",
+        "learning.Enrollment":"fas fa-money-bill",
+        "learning.Pdf":"fas fa-file-pdf",
+        "learning.Review":"fas fa-comment-dots",
+        "learning.Section":"fas fa-object-group",
+         "learning.SubSection":"fas fa-object-ungroup",
+         "learning.Video": "fas fa-film",
+         "django_rest_passwordreset.resetpasswordtoken": "fas fa-lock",
+    },
+}
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-success",
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-dark-success",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "journal",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-outline-primary",
+        "secondary": "btn-outline-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    },
+    "actions_sticky_top": False
+}
+#JAZZMIN_SETTINGS["show_ui_builder"] = True

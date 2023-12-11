@@ -25,6 +25,8 @@ django-ckeditor = "*"
 boto3 = "*"
 django-storages = "*"
 django-rest-passwordreset = "*"
+django-jazzmin = "*"
+django-admin-charts = "*"
 
 [dev-packages]
 

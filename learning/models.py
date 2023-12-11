@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.html import mark_safe
 from django.conf.global_settings import AUTH_USER_MODEL
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
@@ -11,6 +12,9 @@ class Category(models.Model):
 
     def __str__(self) -> str:
         return self.title
+    
+    def img_preview(self): #new
+        return mark_safe(f'<img src = "{self.image}" width = "300"/>')
 
 # class SubCategory(models.Model):
 #     image = models.ImageField(upload_to='images/',null=True)
@@ -41,6 +45,8 @@ class Student(models.Model):
     membership = models.CharField(choices=MEMBERSHIP_CHOICES,default=BROWN,max_length=1)
     points = models.PositiveIntegerField(null=True)
     user = models.OneToOneField(AUTH_USER_MODEL,on_delete=models.CASCADE)
+    def preview(self):
+            return mark_safe('<img src="https://learn-ease.sgp1.digitaloceanspaces.com/api-media/media/public/%s" width="200" height="200" style="object-fit:contain"/>' % (self.avatar.name))
     def __str__(self) -> str:
         return self.user.first_name + " " + self.user.last_name
 
