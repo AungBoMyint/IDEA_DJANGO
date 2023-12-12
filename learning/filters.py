@@ -32,6 +32,7 @@ class CourseFilter(FilterSet):
         fields = {
             'category_id': ['exact'],
             'price': ['lt','gt'],
+            'featured': ['exact'],
         }
         filterset_fields = {
             'enroll_students_gt':['gt'],

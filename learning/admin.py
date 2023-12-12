@@ -344,7 +344,7 @@ class SectionAdmin(nested_admin.NestedModelAdmin):
 #--------------------------#
 @admin.register(models.Course)
 class CourseAdmin(nested_admin.NestedModelAdmin):
-    list_display = ["title","price","reviews_count","ratings_avg","enroll_students","category","discount_price"]
+    list_display = ["title","price","featured","reviews_count","ratings_avg","enroll_students","category","discount_price"]
     search_fields = ['title']
     autocomplete_fields = ['category']
     list_display_links = ['title']

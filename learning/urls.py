@@ -11,6 +11,7 @@ router.register('discounts',views.DiscountViewSet)
 router.register('sliders',views.SliderViewSet)
 router.register('students',views.StudentViewSet)
 router.register('enrollment',views.EnrollmentViewSet)
+router.register('complete_subsections',views.CompleteSubSectionViewSet)
 urlpatterns = [
     path('',include(router.urls)),
 ]

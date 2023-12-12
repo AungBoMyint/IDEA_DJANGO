@@ -282,3 +282,5 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": False
 }
 #JAZZMIN_SETTINGS["show_ui_builder"] = True
+
+

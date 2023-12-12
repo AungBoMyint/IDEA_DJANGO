@@ -57,6 +57,7 @@ class Course(models.Model):
     desc = models.TextField(null=True)
     price = models.IntegerField()
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True,related_name="courses")
+    featured = models.BooleanField(default=False)
     def __str__(self) -> str:
         return self.title
 
@@ -92,6 +93,7 @@ class EnrollStudents(models.Model):
 class Discount(models.Model):
     title = models.CharField(max_length=255)
     discount_percentage = models.IntegerField()
+    image = models.ImageField(upload_to='images/',null=True)
     def __str__(self) -> str:
         return self.title
 
@@ -206,5 +208,5 @@ class BlogLink(models.Model):
 #--------------------------------------------End---------------------------------------------------------------------------
 #----------------For User's Progress------
 class CompleteSubSection(models.Model):
-    section = models.ForeignKey(SubSection,on_delete=models.CASCADE,related_name="complete_subsections")
+    subsection = models.ForeignKey(SubSection,on_delete=models.CASCADE,related_name="complete_subsections")
     student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name="complete_subsections")

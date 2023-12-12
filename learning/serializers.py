@@ -49,9 +49,8 @@ class StudentSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category
-        fields = ["id","title","image","subcategories_count","subcategories_topics_count"]
-    subcategories_count = serializers.IntegerField(read_only=True)
-    subcategories_topics_count = serializers.IntegerField(read_only=True)
+        fields = ["id","title","image","courses_count"]
+    courses_count = serializers.IntegerField()
 class BlogSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Blog
@@ -150,7 +149,7 @@ class CourseSerializer(serializers.ModelSerializer):
         complete_sections = 0
         try:
             complete_sections = models.CompleteSubSection.objects.filter(
-            section__section__course= course.id,
+            subsection__section__course= course.id,
             student_id = models.Student.objects.get(user_id = self.context["user_id"]).id
             ).count()
         except:
@@ -185,7 +184,7 @@ class DiscountItemSerializer(serializers.ModelSerializer):
 class DiscountSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Discount
-        fields = ["id","title","discount_percentage","discount_items"]
+        fields = ["id","title","image","discount_percentage","discount_items"]
     discount_items = DiscountItemSerializer(many=True)
 
 class MessengerSerializer(serializers.ModelSerializer):
@@ -219,4 +218,12 @@ class SliderSerializer(serializers.ModelSerializer):
     youtube = YoutubeSerializer()
     courselink = CourseLinkSerializer()
     blogs = BlogLinkSerializer(many=True)
+
+class CompleteSubSectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.CompleteSubSection
+        fields = ["subsection","student"]
+    student = serializers.ReadOnlyField()
+
+    
 

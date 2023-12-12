@@ -22,7 +22,9 @@ from django.views.decorators.cache import cache_page
 from .signals import enrollment as enrollment_signal
 # Create your views here.
 class CategoryViewSet(ReadOnlyModelViewSet):
-    queryset = models.Category.objects.all()
+    queryset = models.Category.objects.annotate(
+        courses_count = Count('courses')
+    ).all()
     serializer_class = serializers.CategorySerializer
     filter_backends = [DjangoFilterBackend]
 
@@ -203,3 +205,20 @@ class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
 
         })
         return Response(serializer.data)
+
+class CompleteSubSectionViewSet(CreateModelMixin,GenericViewSet):
+    queryset = models.CompleteSubSection.objects.all()
+    serializer_class = serializers.CompleteSubSectionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        return {'user_id':self.request.user.id}
+    
+    def create(self, request, *args, **kwargs):
+        subsection_id = request.data.get("subsection")
+        student_id = request.user.student.id
+        models.CompleteSubSection.objects.create(
+            subsection_id = subsection_id,
+            student_id = student_id,
+        )
+        return Response("ok",status=status.HTTP_201_CREATED)
