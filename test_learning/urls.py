@@ -27,7 +27,7 @@ admin.site.site_header = "Learning Admin Panel"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('learning/',include('learning.urls')),
-    #path("__debug__/", include(debug_toolbar.urls)),
+    path("__debug__/", include(debug_toolbar.urls)),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
     path('_nested_admin/', include('nested_admin.urls')),

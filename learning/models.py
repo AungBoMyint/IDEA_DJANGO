@@ -65,15 +65,16 @@ class Review(models.Model):
     review = models.TextField()
     course = models.ForeignKey(Course,on_delete=models.PROTECT,related_name="reviews")
     student = models.ForeignKey(Student,on_delete=models.PROTECT,related_name="reviews")
-
+    date = models.DateTimeField(auto_now=True)
     def __str__(self) -> str:
         return self.review
+    
 class Rating(models.Model):
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name="ratings")
     student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name="ratings")
     rating = models.FloatField()
     def __str__(self) -> str:
-        return self.rating
+        return f'{self.rating}'
 
 class Enrollment(models.Model):
     enroll_at = models.DateTimeField(auto_now_add=True)

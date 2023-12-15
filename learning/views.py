@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.db.models import Count,Avg
+from django.db.models import Count,Avg,Sum
 from rest_framework import status
 from django.db import transaction
 from rest_framework.response import Response
@@ -15,6 +15,7 @@ from .permissions import IsCurrentUserOrReadOnly
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from . import models
 from . import serializers
+from rest_framework.parsers import JSONParser 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view,permission_classes
 from django.utils.decorators import method_decorator
@@ -75,7 +76,10 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
         total_subsections = Count('sections__subsections',distinct=True),
         videos_count = Count("sections__subsections__video",distinct=True),
         pdfs_count = Count("sections__subsections__pdf",distinct=True),
-        blogs_count = Count("sections__subsections__blog",distinct=True)
+        blogs_count = Count("sections__subsections__blog",distinct=True),
+        video_durations = Sum("sections__subsections__video__duration",distinct=True),
+        pdf_durations = Sum("sections__subsections__pdf__duration",distinct=True),
+        blog_durations = Sum("sections__subsections__blog__duration",distinct=True),
         ) \
     .prefetch_related('ratings') \
     .prefetch_related('reviews') \
@@ -131,17 +135,20 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
     serializer_class = serializers.StudentSerializer
     permission_classes = [IsAuthenticated]
 
-    @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
     def get_serializer_context(self):
         return {'user_id':self.request.user.id}
     
     @action(detail=False,methods=['GET'],permission_classes=[IsAuthenticated])
     def enrolled_courses(self,request):
         enrollment = get_list_or_404(models.EnrollStudents.objects.filter(student__user__id=request.user.id) \
-        .prefetch_related('course'))
+        .prefetch_related('course') \
+        .annotate(
+            total_subsections = Count('course__sections__subsections',distinct=True),
+        videos_count = Count("course__sections__subsections__video",distinct=True),
+        pdfs_count = Count("course__sections__subsections__pdf",distinct=True),
+        blogs_count = Count("course__sections__subsections__blog",distinct=True)
+        )
+        )
 
         
         serializer = serializers.EnrollCourseSerializer(enrollment,many=True)
@@ -222,3 +229,31 @@ class CompleteSubSectionViewSet(CreateModelMixin,GenericViewSet):
             student_id = student_id,
         )
         return Response("ok",status=status.HTTP_201_CREATED)
+
+@api_view(["GET"])
+def rating_list(request:Request,course_id):
+    if request.method == "GET":
+        if(course_id):
+            #if course id is passed
+            #find all rating in this course_id
+            rating_one_count = models.Rating.objects.filter(course_id=course_id,rating__lt=1.9).count()
+            rating_two_count = models.Rating.objects.filter(course_id=course_id,rating__lt=2.9,rating__gt=1.9).count()
+            rating_three_count = models.Rating.objects.filter(course_id=course_id,rating__lt=3.9,rating__gt=2.9).count()
+            rating_four_count = models.Rating.objects.filter(course_id=course_id,rating__lt=4.9,rating__gt=3.9).count()
+            rating_five_count = models.Rating.objects.filter(course_id=course_id,rating__gt=4.9).count()
+            total_ratings = models.Rating.objects.filter(course_id=course_id).count()
+            return Response(data={
+                "rating_one":rating_one_count,
+                "rating_two":rating_two_count,
+                "rating_three":rating_three_count,
+                "rating_four":rating_four_count,
+                "rating_five":rating_five_count,
+                "total_ratings":total_ratings,
+            },status=status.HTTP_200_OK)
+
+class ReviewViewSet(ModelViewSet ):
+    #permission_classes = [IsAuthenticated]
+    queryset = models.Review.objects.prefetch_related("student__user").prefetch_related("course").all()
+    serializer_class = serializers.ReviewSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["course_id"]

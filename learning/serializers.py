@@ -87,12 +87,52 @@ class EnrollStudentSerializer(serializers.ModelSerializer):
 class SimpleCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
-        fields = ["id","title","desc","price",]
+        fields = ["id","title","image"]
+    
+
 class EnrollCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.EnrollStudents
-        fields = ['course']
+        fields = ['id',"course","total_subsections","progress","videos","pdfs","blogs"]
     course = SimpleCourseSerializer()
+    total_subsections = serializers.IntegerField()
+    progress= serializers.IntegerField()
+   
+    
+    videos = serializers.SerializerMethodField(
+        method_name="get_videos",
+    )
+    pdfs = serializers.SerializerMethodField(
+        method_name="get_pdfs",
+    )
+    blogs = serializers.SerializerMethodField(
+        method_name="get_blogs",
+    )
+
+    progress = serializers.SerializerMethodField(
+        method_name="get_progress",
+    )
+    
+    def get_videos(self,course:models.Course):
+        return course.videos_count
+    def get_pdfs(self,course:models.Course):
+        return course.pdfs_count
+    def get_blogs(self,course:models.Blog):
+        return course.blogs_count
+
+    def get_progress(self,course:models.Course):
+        total_sections = course.total_subsections
+        complete_sections = 0
+        try:
+            complete_sections = models.CompleteSubSection.objects.filter(
+            subsection__section__course= course.id,
+            student_id = models.Student.objects.get(user_id = self.context["user_id"]).id
+            ).count()
+        except:
+            print("Exception getting progress")
+        if(total_sections <= 0):
+            return 0
+        return (complete_sections/total_sections) * 100
 class SimpleEnrollCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.EnrollStudents
@@ -107,13 +147,25 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
-        fields = ["id","title","image","desc","price","discount_price","enroll_students_count","ratings_avg","reviews_count","is_enrolled","total_subsections","progress","category","videos","pdfs","blogs","enroll_students","sections"]
+        fields = ["id","title","image","desc","price","discount_price","enroll_students_count",
+                  "ratings_avg","reviews_count","is_enrolled","total_subsections",
+                  "progress","category","videos","pdfs","blogs",
+                  #"video_durations","pdf_durations","blog_durations",
+                  "total_durations","enroll_students","sections"]
     enroll_students = EnrollStudentSerializer(many=True)
     sections = SectionSerializer(many=True)
     enroll_students_count = serializers.IntegerField()
     category = serializers.CharField()
+    # video_durations = serializers.FloatField()
+    # pdf_durations = serializers.IntegerField()
+    # blog_durations = serializers.IntegerField()
     reviews_count = serializers.IntegerField()
-    ratings_avg = serializers.DecimalField(max_digits=2,decimal_places=1)
+    total_durations = serializers.SerializerMethodField(
+        method_name="get_total_durations",
+    )
+    ratings_avg = serializers.SerializerMethodField(
+        method_name="get_ratings",
+    )
     total_subsections = serializers.IntegerField()
     progress= serializers.IntegerField()
     videos = serializers.SerializerMethodField(
@@ -137,6 +189,17 @@ class CourseSerializer(serializers.ModelSerializer):
         method_name='check_is_enrolled'
     )
 
+    def get_total_durations(self,course:models.Course):
+        return (course.video_durations or 0) + \
+                (course.pdf_durations or 0) + \
+                (course.blog_durations or 0)
+    
+    def get_ratings(self,course:models.Course):
+        if(course.ratings_avg):
+            return course.ratings_avg
+        else:
+            return 0.0
+        
     def get_videos(self,course:models.Course):
         return course.videos_count
     def get_pdfs(self,course:models.Course):
@@ -225,5 +288,17 @@ class CompleteSubSectionSerializer(serializers.ModelSerializer):
         fields = ["subsection","student"]
     student = serializers.ReadOnlyField()
 
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Review
+        fields = ["review","course","student","rating","date"]
+    student = StudentSerializer(read_only=True)
+    rating = serializers.SerializerMethodField(method_name="get_rating",read_only=True)
+    def get_rating(self,review:models.Review):
+        ratings = models.Rating.objects.filter(course_id=review.course,student_id=review.student.id)
+        if(ratings.exists()):
+            return ratings.first().rating
+        else:
+            return 0
     
 

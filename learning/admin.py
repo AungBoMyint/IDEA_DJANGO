@@ -28,6 +28,9 @@ from django.contrib.admin import TabularInline,StackedInline
 from django.forms.models import BaseInlineFormSet, ModelChoiceField
 
 # Register your models here.
+@admin.register(models.Rating)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ['course','student','rating']
 
 @admin.register(models.Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -295,17 +298,29 @@ class PdfInline(nested_admin.NestedStackedInline):
 @admin.register(models.SubSection)
 class SubSectionAdmin(nested_admin.NestedModelAdmin):
     search_fields = ["title"]
-    list_display = ["title","section","course","videos"]
+    list_display = ["title","section","course"]
     inlines = [VideoInline,BlogInline,PdfInline]
     autocomplete_fields = ["section"]
 
-    def videos(self,subSection:models.SubSection):
+    """ def videos(self,subSection:models.SubSection):
         vid = models.Video.objects.filter(subsection_id=subSection.id)
         return format_html_join(
             ",",
             "<a href={}>{}</a>",
             ((reverse('admin:learning_video_changelist'),v.video_url) for v in vid)
         )
+    def pdf(self,subSection:models.SubSection):
+        pdf = models.Pdf.objects.filter(subsection_id=subSection.id)
+        return format_html_join(
+            ",",
+            "<a href={}>{}</a>",
+            ((reverse('admin:learning_pdf_changelist'),v.pdf_url) for v in pdf)
+        )
+    def blogs(self,subSection:models.SubSection):
+        blog = models.Blog.objects.filter(subsection_id=subSection.id)
+        if(blog):
+            return blog.first().title
+        return "" """
    
     @admin.display()
     def course(self,subsection:models.SubSection):
