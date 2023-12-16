@@ -140,6 +140,7 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
     
     @action(detail=False,methods=['GET'],permission_classes=[IsAuthenticated])
     def enrolled_courses(self,request):
+        
         enrollment = get_list_or_404(models.EnrollStudents.objects.filter(student__user__id=request.user.id) \
         .prefetch_related('course') \
         .annotate(
@@ -150,8 +151,8 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
         )
         )
 
-        
-        serializer = serializers.EnrollCourseSerializer(enrollment,many=True)
+        context = self.get_serializer_context()
+        serializer = serializers.EnrollCourseSerializer(enrollment,many=True,context=context)
         return Response(serializer.data)
 
     @action(detail=False,methods=['GET','PUT'],permission_classes=[IsAuthenticated])

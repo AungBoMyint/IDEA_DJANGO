@@ -125,14 +125,17 @@ class EnrollCourseSerializer(serializers.ModelSerializer):
         complete_sections = 0
         try:
             complete_sections = models.CompleteSubSection.objects.filter(
-            subsection__section__course= course.id,
+            subsection__section__course= course.course.id,
             student_id = models.Student.objects.get(user_id = self.context["user_id"]).id
             ).count()
-        except:
-            print("Exception getting progress")
+        except Exception as e:
+            print(f"Exception getting progress: {str(e)}")
         if(total_sections <= 0):
             return 0
+        
+        pprint.pprint(f"CompleteSection:{complete_sections} TotalSections:{total_sections} UserId: {self.context["user_id"]} CourseId: {course.course.id}")
         return (complete_sections/total_sections) * 100
+    
 class SimpleEnrollCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.EnrollStudents
