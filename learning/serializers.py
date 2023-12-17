@@ -150,7 +150,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
-        fields = ["id","title","image","desc","price","discount_price","enroll_students_count",
+        fields = ["id","title","image","video","desc","price","discount_price","enroll_students_count",
                   "ratings_avg","reviews_count","is_enrolled","total_subsections",
                   "progress","category","videos","pdfs","blogs",
                   #"video_durations","pdf_durations","blog_durations",

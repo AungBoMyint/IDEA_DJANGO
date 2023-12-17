@@ -53,6 +53,7 @@ class Student(models.Model):
 
 class Course(models.Model):
     image = models.ImageField(upload_to='images/',null=True)
+    video = models.FileField(upload_to='videos/',null=True)
     title = models.CharField(max_length=255)
     desc = models.TextField(null=True)
     price = models.IntegerField()
