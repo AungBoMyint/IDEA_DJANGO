@@ -29,9 +29,9 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     serializer_class = serializers.CategorySerializer
     filter_backends = [DjangoFilterBackend]
 
-    @method_decorator(cache_page(5 * 60))
+    """ @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  """
     
 
 # class SubCategoryViewSet(ReadOnlyModelViewSet):
@@ -58,12 +58,17 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
     filter_backends = [DjangoFilterBackend,SearchFilter]
     filterset_class = filters.CourseFilter
     search_fields = ["title"]
-
+    
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return serializers.DetailCourseSerializer
+        else:
+            return serializers.CourseSerializer
     
     #---------------------For Caching-----------
-    @method_decorator(cache_page(5 * 60))
+    """ @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs) """
     #--------------------------
     def get_serializer_context(self):
         return {'user_id':self.request.user.id}
@@ -103,9 +108,9 @@ class DiscountViewSet(ReadOnlyModelViewSet):
         "discount_items__course__sections"
         ).all()
     serializer_class = serializers.DiscountSerializer
-    @method_decorator(cache_page(5 * 60))
+    """ @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs) """
 
 class SubSectionViewSet(ReadOnlyModelViewSet):
     queryset = models.SubSection.objects.prefetch_related("video") \
@@ -113,9 +118,9 @@ class SubSectionViewSet(ReadOnlyModelViewSet):
     .prefetch_related("pdf") \
     .all()
     serializer_class = serializers.SubSectionSerializer
-    @method_decorator(cache_page(5 * 60))
+    """ @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs) """
 
 class SliderViewSet(ReadOnlyModelViewSet):
     queryset = models.Slider.objects.prefetch_related(
@@ -126,9 +131,9 @@ class SliderViewSet(ReadOnlyModelViewSet):
         "blogs"
     ).all()
     serializer_class = serializers.SliderSerializer
-    @method_decorator(cache_page(5 * 60))
+    """ @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs) """
 
 class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericViewSet):
     queryset = models.Student.objects.select_related('user').all()
@@ -174,9 +179,9 @@ class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
     serializer_class = serializers.EnrollmentSerializer
     permission_classes = [IsAuthenticated]
 
-    @method_decorator(cache_page(5 * 60))
+    """ @method_decorator(cache_page(5 * 60))
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs) """
 
     def create(self, request, *args, **kwargs):
         #check enroll_students is empty or not
@@ -225,11 +230,18 @@ class CompleteSubSectionViewSet(CreateModelMixin,GenericViewSet):
     def create(self, request, *args, **kwargs):
         subsection_id = request.data.get("subsection")
         student_id = request.user.student.id
-        models.CompleteSubSection.objects.create(
+        complete_query = models.CompleteSubSection.objects.filter(
             subsection_id = subsection_id,
             student_id = student_id,
         )
-        return Response("ok",status=status.HTTP_201_CREATED)
+        if complete_query.exists():
+            return Response("Already completed,so can't did twice",status=status.HTTP_400_BAD_REQUEST)
+        else:
+            models.CompleteSubSection.objects.create(
+            subsection_id = subsection_id,
+            student_id = student_id,
+            )
+            return Response("ok",status=status.HTTP_201_CREATED)
 
 @api_view(["GET"])
 def rating_list(request:Request,course_id):
