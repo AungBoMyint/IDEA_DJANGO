@@ -270,3 +270,36 @@ class ReviewViewSet(ModelViewSet ):
     serializer_class = serializers.ReviewSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["course_id"]
+
+    def create(self, request, *args, **kwargs):
+        course_id = request.data.get("course")
+        student_id = request.user.student.id
+        review_query = models.Review.objects.filter(course_id=course_id,student_id=student_id)
+        if review_query.exists():
+            return Response("You can't review twice!",status=status.HTTP_400_BAD_REQUEST)
+        return super().create(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        if(self.request.user.id):
+            return {'student_id':self.request.user.student.id}
+        else:
+            return {'student_id':0}
+
+class RatingViewSet(ModelViewSet ):
+    #permission_classes = [IsAuthenticated]
+    queryset = models.Rating.objects.prefetch_related("student__user").all()
+    serializer_class = serializers.RatingSerializer
+
+    def create(self, request, *args, **kwargs):
+        course_id = request.data.get("course")
+        student_id = request.user.student.id
+        rating_query = models.Rating.objects.filter(course_id=course_id,student_id=student_id)
+        if rating_query.exists():
+            return Response("You can't rating twice!",status=status.HTTP_400_BAD_REQUEST)
+        return super().create(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        if(self.request.user.id):
+            return {'student_id':self.request.user.student.id}
+        else:
+            return {'student_id':0}

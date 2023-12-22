@@ -257,7 +257,7 @@ class CourseSerializer(serializers.ModelSerializer):
             discount_amount = (course.discount_item.discount.discount_percentage/100) * original_amount
             return  original_amount - discount_amount
         except:
-            return 0
+            return None
     def check_is_enrolled(self,course:models.Course):
         #enroll_students = models.EnrollStudents.objects.prefetch_related('student__user').filter(course_id = course.id)
         try:
@@ -423,4 +423,21 @@ class ReviewSerializer(serializers.ModelSerializer):
         else:
             return 0
     
+    def create(self, validated_data):
+        student_id = self.context.get('student_id')
+        instance = models.Review.objects.create(student_id=student_id,**validated_data)
+        return instance
+    
 
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Rating
+        fields = ["rating","course","student"]
+    student = StudentSerializer(read_only=True)
+   
+    
+    
+    def create(self, validated_data):
+        student_id = self.context.get('student_id')
+        instance = models.Rating.objects.create(student_id=student_id,**validated_data)
+        return instance

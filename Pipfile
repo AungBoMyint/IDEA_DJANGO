@@ -28,6 +28,8 @@ django-rest-passwordreset = "*"
 django-jazzmin = "*"
 django-admin-charts = "*"
 pytz = "*"
+gunicorn = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
