@@ -82,9 +82,9 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
         videos_count = Count("sections__subsections__video",distinct=True),
         pdfs_count = Count("sections__subsections__pdf",distinct=True),
         blogs_count = Count("sections__subsections__blog",distinct=True),
-        video_durations = Sum("sections__subsections__video__duration",distinct=True),
-        pdf_durations = Sum("sections__subsections__pdf__duration",distinct=True),
-        blog_durations = Sum("sections__subsections__blog__duration",distinct=True),
+        video_durations = Sum("sections__subsections__video__duration"),
+        pdf_durations = Sum("sections__subsections__pdf__duration"),
+        blog_durations = Sum("sections__subsections__blog__duration"),
         ) \
     .prefetch_related('ratings') \
     .prefetch_related('reviews') \
