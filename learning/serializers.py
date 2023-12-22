@@ -159,7 +159,6 @@ class EnrollCourseSerializer(serializers.ModelSerializer):
         if(total_sections <= 0):
             return 0
         
-        pprint.pprint(f"CompleteSection:{complete_sections} TotalSections:{total_sections} UserId: {self.context["user_id"]} CourseId: {course.course.id}")
         return (complete_sections/total_sections) * 100
     
 class SimpleEnrollCourseSerializer(serializers.ModelSerializer):
