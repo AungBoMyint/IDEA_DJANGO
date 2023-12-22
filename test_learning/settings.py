@@ -226,7 +226,7 @@ JAZZMIN_SETTINGS = {
                               "learning.Discount","learning.DiscountItem",
                               "learning.Student","learning.Enrollment","learning.EnrollStudents",
                               "learning.Review"],
-    "site_logo": "image/learnease-logo.png",
+    "site_logo": "static/image/learnease-logo.png",
      "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
