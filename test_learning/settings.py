@@ -94,11 +94,12 @@ WSGI_APPLICATION = 'test_learning.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'learning_app_1',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'learning',
+        'USER': 'learning_admin',
+        'PASSWORD': 'djangopro$1000',
         'HOST': 'localhost',
-        'USER': 'root',
-        'PASSWORD': 'djangopro$1000'
+        'PORT': '',
     }
 }
 
@@ -139,6 +140,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
