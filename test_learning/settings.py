@@ -285,3 +285,23 @@ JAZZMIN_UI_TWEAKS = {
 #JAZZMIN_SETTINGS["show_ui_builder"] = True
 
 
+# settings.py
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/home/zarnibwar/learning_app/logs/django.log',  # Specify your log file path
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
