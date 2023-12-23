@@ -294,7 +294,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/home/zarnibwar/learning_app/logs/django.log',  # Specify your log file path
+            'filename': './logs/django.log',  # Specify your log file path
         },
     },
     'loggers': {
