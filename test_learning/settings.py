@@ -28,7 +28,8 @@ SECRET_KEY = 'django-insecure--zj9!ham3_&ino22a$s=k7ek57o$z*kk!d%gcg(r@#ni_=1+nj
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '139.59.99.129'
+    '159.223.47.176'
+    #'139.59.99.129'
 ]
 
 
@@ -94,12 +95,10 @@ WSGI_APPLICATION = 'test_learning.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'learning',
-        'USER': 'learning_admin',
-        'PASSWORD': 'djangopro$1000',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.mysql',
+    	'OPTIONS': {
+        	'read_default_file': '/etc/mysql/my.cnf',
+    	},
     }
 }
 
