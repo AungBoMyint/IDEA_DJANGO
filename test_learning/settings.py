@@ -208,11 +208,13 @@ DEFAULT_FILE_STORAGE = 'test_learning.storage_backends.PublicMediaStorage'
 
 # Email Backend SMTP Server
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = 'localhost'
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_PORT = 2525
-DEFAULT_FROM_EMAIL = 'learnease@gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'truelife787799@gmail.com'
+EMAIL_HOST_PASSWORD = 'rwsbdouaexkfdsqu'
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+#EMAIL_PORT = 2525
+#DEFAULT_FROM_EMAIL = 'learnease@gmail.com'
 #JAZZMIN SETTINGS
 
 JAZZMIN_SETTINGS = {
