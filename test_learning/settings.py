@@ -57,7 +57,14 @@ INSTALLED_APPS = [
     'ckeditor',
     'storages',
     'django_rest_passwordreset',
+    'corsheaders',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    'http://192.168.1.2:8000',
+]
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -67,7 +74,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'test_learning.urls'
