@@ -29,6 +29,7 @@ django-jazzmin = "*"
 pytz = "*"
 gunicorn = "*"
 psycopg2-binary = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 

@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 from django.utils.html import mark_safe
 from django.conf.global_settings import AUTH_USER_MODEL
 from django.contrib.contenttypes.models import ContentType
@@ -87,6 +89,9 @@ class EnrollStudents(models.Model):
     enrollment = models.ForeignKey(Enrollment,on_delete=models.PROTECT,related_name="enroll_students")
     student = models.ForeignKey(Student,on_delete=models.PROTECT,related_name="enroll_students")
     course = models.ForeignKey(Course,on_delete=models.SET_NULL,null=True,related_name="enroll_students")
+    subscribed_count = models.IntegerField(default=1,blank=True)
+    subscribed = models.BooleanField(default=False)
+    expiration_date = models.DateTimeField(default=timezone.now() + timedelta(days=60),blank=True)
     def __str__(self) -> str:
         return self.student.user.first_name + " " + self.student.user.last_name
 

@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Subquery
 from django.db.models import Count,Avg,Sum
 from rest_framework import status
 from django.db import transaction
@@ -73,29 +76,42 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
     def get_serializer_context(self):
         return {'user_id':self.request.user.id}
     def get_queryset(self):
-        return models.Course.objects \
-    .annotate(
-        enroll_students_count=Count('enroll_students',distinct=True),
-        ratings_avg = Avg('ratings__rating',distinct=True),
-        reviews_count = Count('reviews',distinct=True),
-        total_subsections = Count('sections__subsections',distinct=True),
-        videos_count = Count("sections__subsections__video",distinct=True),
-        pdfs_count = Count("sections__subsections__pdf",distinct=True),
-        blogs_count = Count("sections__subsections__blog",distinct=True),
-        video_durations = Sum("sections__subsections__video__duration"),
-        pdf_durations = Sum("sections__subsections__pdf__duration"),
-        blog_durations = Sum("sections__subsections__blog__duration"),
-        ) \
-    .prefetch_related('ratings') \
-    .prefetch_related('reviews') \
-    .select_related('discount_item__discount') \
-    .prefetch_related('enroll_students__student__user') \
-    .prefetch_related('category') \
-    .prefetch_related('sections__subsections__video') \
-    .prefetch_related('sections__subsections__blog') \
-    .prefetch_related('sections__subsections__pdf') \
-    .prefetch_related('sections__subsections__complete_subsections') \
-    .all()
+        user_id = self.request.user.id  # Assuming user is authenticated
+        # Subquery to get IDs of courses where the user is enrolled
+        enrolled_courses = models.EnrollStudents.objects.filter(student__user_id=user_id).values('course_id').distinct()
+        if self.action == "list":
+            return models.Course.objects \
+            .annotate(
+            ratings_avg = Avg('ratings__rating',distinct=True),
+            reviews_count = Count('reviews',distinct=True)
+            ) \
+        .prefetch_related('ratings') \
+        .prefetch_related('reviews') \
+        .exclude(id__in=Subquery(enrolled_courses))
+        else:
+            return models.Course.objects \
+            .annotate(
+            enroll_students_count=Count('enroll_students',distinct=True),
+            ratings_avg = Avg('ratings__rating',distinct=True),
+            reviews_count = Count('reviews',distinct=True),
+            total_subsections = Count('sections__subsections',distinct=True),
+            videos_count = Count("sections__subsections__video",distinct=True),
+            pdfs_count = Count("sections__subsections__pdf",distinct=True),
+            blogs_count = Count("sections__subsections__blog",distinct=True),
+            video_durations = Sum("sections__subsections__video__duration"),
+            pdf_durations = Sum("sections__subsections__pdf__duration"),
+            blog_durations = Sum("sections__subsections__blog__duration"),
+            ) \
+        .prefetch_related('ratings') \
+        .prefetch_related('reviews') \
+        .select_related('discount_item__discount') \
+        .prefetch_related('enroll_students__student__user') \
+        .prefetch_related('category') \
+        .prefetch_related('sections__subsections__video') \
+        .prefetch_related('sections__subsections__blog') \
+        .prefetch_related('sections__subsections__pdf') \
+        .prefetch_related('sections__subsections__complete_subsections') \
+        .exclude(id__in=Subquery(enrolled_courses))
     
         
 
@@ -145,20 +161,37 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
     
     @action(detail=False,methods=['GET'],permission_classes=[IsAuthenticated])
     def enrolled_courses(self,request):
-        
-        enrollment = get_list_or_404(models.EnrollStudents.objects.filter(student__user__id=request.user.id) \
-        .prefetch_related('course') \
-        .annotate(
-            total_subsections = Count('course__sections__subsections',distinct=True),
-        videos_count = Count("course__sections__subsections__video",distinct=True),
-        pdfs_count = Count("course__sections__subsections__pdf",distinct=True),
-        blogs_count = Count("course__sections__subsections__blog",distinct=True)
-        )
-        )
 
+        enrolled_courses = models.Course.objects \
+         \
+            .annotate(
+            enroll_students_count=Count('enroll_students',distinct=True),
+            ratings_avg = Avg('ratings__rating',distinct=True),
+            reviews_count = Count('reviews',distinct=True),
+            total_subsections = Count('sections__subsections',distinct=True),
+            videos_count = Count("sections__subsections__video",distinct=True),
+            pdfs_count = Count("sections__subsections__pdf",distinct=True),
+            blogs_count = Count("sections__subsections__blog",distinct=True),
+            video_durations = Sum("sections__subsections__video__duration"),
+            pdf_durations = Sum("sections__subsections__pdf__duration"),
+            blog_durations = Sum("sections__subsections__blog__duration"),
+            ) \
+        .prefetch_related('ratings') \
+        .prefetch_related('reviews') \
+        .select_related('discount_item__discount') \
+        .prefetch_related('enroll_students') \
+        .prefetch_related('enroll_students__student__user') \
+        .prefetch_related('category') \
+        .prefetch_related('sections__subsections__video') \
+        .prefetch_related('sections__subsections__blog') \
+        .prefetch_related('sections__subsections__pdf') \
+        .prefetch_related('sections__subsections__complete_subsections') \
+        .filter(enroll_students__student__user_id=request.user.id,enroll_students__subscribed=True)
+        #.filter(id__in=Subquery(models.EnrollStudents.objects.filter(student__user=request.user).values('course_id').distinct()))
         context = self.get_serializer_context()
-        serializer = serializers.EnrollCourseSerializer(enrollment,many=True,context=context)
-        return Response(serializer.data)
+        serialized_courses = serializers.EnrollCourseSerializer(enrolled_courses, many=True,context=context).data
+
+        return Response(serialized_courses)
 
     @action(detail=False,methods=['GET','PUT'],permission_classes=[IsAuthenticated])
     def me(self,request):
@@ -174,7 +207,7 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
             return Response(serializer.data)
         
 
-class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
+class EnrollmentViewSet(CreateModelMixin,UpdateModelMixin,GenericViewSet,RetrieveModelMixin):
     queryset = models.Enrollment.objects.prefetch_related('enroll_students').all()
     serializer_class = serializers.EnrollmentSerializer
     permission_classes = [IsAuthenticated]
@@ -188,36 +221,40 @@ class EnrollmentViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):
         enroll_students = request.data.get("enroll_students",[])
         if len(enroll_students) < 1:
             return Response({"enroll_students":"Enroll Students shouldn't be empty"},status=status.HTTP_400_BAD_REQUEST)
-        #if there has enroll_students already with course_id & user_id
-        #then we remove this course_id
-        for course_id in enroll_students:
-            ifExist = models.EnrollStudents.objects.filter(course_id=course_id,student_id = request.user.student.id).first()
-            if ifExist:
-                course = models.Course.objects.get(pk=course_id)
-                return Response(data=f'You have already enrolled this {course.title}',status=status.HTTP_400_BAD_REQUEST)
-        #if not empty
+        
         with transaction.atomic():
-            #first we save Enrollment
-            enrollment = models.Enrollment.objects.create()
-            #second we loop and save enroll_students
-            
             for course_id in enroll_students:
-                models.EnrollStudents.objects.create(
+                student_queryset = models.EnrollStudents.objects.filter(course_id=course_id,student_id = request.user.student.id)
+                exist = student_queryset.exists()
+                if exist:
+                    #mean update
+                    subscribed_count = student_queryset.first().subscribed_count + 1
+                    student_queryset.update(
+                                            subscribed = True,
+                                            expiration_date = timezone.now() + timedelta(minutes=2),
+                                            subscribed_count = subscribed_count
+                                        )
+                else:
+                    #crate
+                    enrollment = models.Enrollment.objects.create()
+                    models.EnrollStudents.objects.create(
                                     enrollment_id = enrollment.id,
                                     course_id = course_id,
-                                    student_id = request.user.student.id
+                                    student_id = request.user.student.id,
+                                    subscribed = True,
+                                    expiration_date = timezone.now() + timedelta(minutes=2)
                                 )
-                
-            #then return enrollment
-        serializer = serializers.EnrollmentSerializer(enrollment)
-        courses = models.Course.objects.filter(id__in=enroll_students).values("title")
-        enrollment_signal.send_robust(self.__class__,data={
-            "email": request.user.email,
-            "student": request.user.username,
-            "courses":courses,
+            return Response(data="Success",status=status.HTTP_200_OK)
+            """ serializer = serializers.EnrollmentSerializer(enrollment)
+            courses = models.Course.objects.filter(id__in=enroll_students).values("title")
+            enrollment_signal.send_robust(self.__class__,data={
+                "email": request.user.email,
+                "student": request.user.username,
+                "courses":courses,
 
-        })
-        return Response(serializer.data)
+            })
+            
+            return Response(serializer.data) """
 
 class CompleteSubSectionViewSet(CreateModelMixin,GenericViewSet):
     queryset = models.CompleteSubSection.objects.all()
