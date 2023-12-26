@@ -32,6 +32,15 @@ from django.forms.models import BaseInlineFormSet, ModelChoiceField
 class RatingAdmin(admin.ModelAdmin):
     list_display = ['course','student','rating']
 
+@admin.register(models.Slider)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ['id','image']
+
+@admin.register(models.CourseLink)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ['id',"slider"]
+    
+
 @admin.register(models.Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['title','image_']

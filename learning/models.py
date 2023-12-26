@@ -180,7 +180,7 @@ class Slider(models.Model):
     image = models.ImageField(upload_to="images/")
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self) -> str:
-        return f'{self.created_at}'
+        return f'{self.id}'
     
 
 class MessengerLink(models.Model):

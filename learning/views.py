@@ -83,7 +83,8 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
             return models.Course.objects \
             .annotate(
             ratings_avg = Avg('ratings__rating',distinct=True),
-            reviews_count = Count('reviews',distinct=True)
+            reviews_count = Count('reviews',distinct=True),
+            total_subsections = Count('sections__subsections',distinct=True),
             ) \
         .prefetch_related('ratings') \
         .prefetch_related('reviews') \
@@ -141,7 +142,7 @@ class SubSectionViewSet(ReadOnlyModelViewSet):
 class SliderViewSet(ReadOnlyModelViewSet):
     queryset = models.Slider.objects.prefetch_related(
         "messengerlink",
-        "courselink",
+        "courselink__course",
         "facebooklink",
         "youtube",
         "blogs"
@@ -231,7 +232,7 @@ class EnrollmentViewSet(CreateModelMixin,UpdateModelMixin,GenericViewSet,Retriev
                     subscribed_count = student_queryset.first().subscribed_count + 1
                     student_queryset.update(
                                             subscribed = True,
-                                            expiration_date = timezone.now() + timedelta(minutes=2),
+                                            expiration_date = timezone.now() + timedelta(minutes=3),
                                             subscribed_count = subscribed_count
                                         )
                 else:
@@ -242,7 +243,7 @@ class EnrollmentViewSet(CreateModelMixin,UpdateModelMixin,GenericViewSet,Retriev
                                     course_id = course_id,
                                     student_id = request.user.student.id,
                                     subscribed = True,
-                                    expiration_date = timezone.now() + timedelta(minutes=2)
+                                    expiration_date = timezone.now() + timedelta(minutes=3)
                                 )
             return Response(data="Success",status=status.HTTP_200_OK)
             """ serializer = serializers.EnrollmentSerializer(enrollment)
@@ -340,3 +341,4 @@ class RatingViewSet(ModelViewSet ):
             return {'student_id':self.request.user.student.id}
         else:
             return {'student_id':0}
+
