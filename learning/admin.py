@@ -34,8 +34,12 @@ class RatingAdmin(admin.ModelAdmin):
 
 @admin.register(models.Slider)
 class RatingAdmin(admin.ModelAdmin):
-    list_display = ['id','image']
+    list_display = ['title','image']
 
+@admin.register(models.BlogLink)
+class BlogLinkAdmin(admin.ModelAdmin):
+    list_display = ['id','slider']
+    
 @admin.register(models.CourseLink)
 class RatingAdmin(admin.ModelAdmin):
     list_display = ['id',"slider"]

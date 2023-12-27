@@ -389,7 +389,7 @@ class BlogLinkSerializer(serializers.ModelSerializer):
 class SliderSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Slider
-        fields = ["id","image","created_at","messengerlink","facebooklink","youtube","courselink","blogs"]
+        fields = ["id","title","image","created_at","messengerlink","facebooklink","youtube","courselink","blogs"]
     messengerlink = MessengerSerializer()
     facebooklink = FacebookSerializer()
     youtube = YoutubeSerializer()

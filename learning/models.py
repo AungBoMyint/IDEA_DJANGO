@@ -177,10 +177,11 @@ class Pdf(models.Model):
 
 #---------------------------------Slider Related Model--------------------------------------------------------------------
 class Slider(models.Model):
+    title = models.CharField(max_length=255)
     image = models.ImageField(upload_to="images/")
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self) -> str:
-        return f'{self.id}'
+        return self.title
     
 
 class MessengerLink(models.Model):
