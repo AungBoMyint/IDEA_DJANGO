@@ -105,15 +105,15 @@ WSGI_APPLICATION = 'test_learning.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-""" DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
     	'OPTIONS': {
         	'read_default_file': '/etc/mysql/my.cnf',
     	},
     }
-} """
-DATABASES = {
+} 
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'learning_app_1',
@@ -122,7 +122,7 @@ DATABASES = {
         'HOST': 'localhost',  # Or the IP address/hostname of your MySQL server
         'PORT': '',           # Default MySQL port is usually 3306
     }
-}
+} """
 
 
 # Password validation

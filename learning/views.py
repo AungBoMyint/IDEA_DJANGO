@@ -245,6 +245,13 @@ class EnrollmentViewSet(CreateModelMixin,UpdateModelMixin,GenericViewSet,Retriev
                                     subscribed = True,
                                     expiration_date = timezone.now() + timedelta(minutes=3)
                                 )
+            courses = models.Course.objects.filter(id__in=enroll_students).values("title")
+            enrollment_signal.send_robust(self.__class__,data={
+                "email": request.user.email,
+                "student": request.user.username,
+                "courses":courses,
+
+            })
             return Response(data="Success",status=status.HTTP_200_OK)
             """ serializer = serializers.EnrollmentSerializer(enrollment)
             courses = models.Course.objects.filter(id__in=enroll_students).values("title")
