@@ -162,7 +162,7 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
     
     @action(detail=False,methods=['GET'],permission_classes=[IsAuthenticated])
     def enrolled_courses(self,request):
-        course_id = request.get('course_id')
+        course_id = request.GET.get('course_id')
         courses_queryset = models.Course.objects \
          \
             .annotate(
