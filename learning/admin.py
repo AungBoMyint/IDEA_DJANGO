@@ -32,6 +32,36 @@ from django.forms.models import BaseInlineFormSet, ModelChoiceField
 class RatingAdmin(admin.ModelAdmin):
     list_display = ['course','student','rating']
 
+#Blog Link
+class BlogLinkAdmin(nested_admin.NestedStackedInline):
+    list_display = ['id','slider']
+    model = models.BlogLink
+
+#Course Link 
+class CourseLinkAdmin(nested_admin.NestedStackedInline):
+    list_display = ['id',"slider"]
+    model = models.CourseLink
+
+#Youtube Link
+class YoutubeLinkAdmin(nested_admin.NestedStackedInline):
+    list_display = ['id',"slider"]
+    model = models.YoutubeLink
+#Facebook Link
+class FacebokLinkAdmin(nested_admin.NestedStackedInline):
+    list_display = ['id',"slider"]
+    model = models.FacebookLink
+#Messenger Link
+class MessengerLinkAdmin(nested_admin.NestedStackedInline):
+    list_display = ['id',"slider"]
+    model = models.MessengerLink
+
+#Slider 
+@admin.register(models.Slider)
+class SliderAdmin(nested_admin.NestedModelAdmin):
+    list_display = ['title','image']
+    inlines = [CourseLinkAdmin,BlogLinkAdmin,YoutubeLinkAdmin,FacebokLinkAdmin,MessengerLinkAdmin]
+    
+
 @admin.register(models.Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['title','image_']

@@ -30,6 +30,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '159.223.47.176',
     '192.168.1.2',
+    '127.0.0.1',
+    '10.0.2.2',
     #'139.59.99.129'
 ]
 
@@ -103,12 +105,22 @@ WSGI_APPLICATION = 'test_learning.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
     	'OPTIONS': {
         	'read_default_file': '/etc/mysql/my.cnf',
     	},
+    }
+} """
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'learning_app_1',
+        'USER': 'root',
+        'PASSWORD': 'djangopro$1000',
+        'HOST': 'localhost',  # Or the IP address/hostname of your MySQL server
+        'PORT': '',           # Default MySQL port is usually 3306
     }
 }
 
