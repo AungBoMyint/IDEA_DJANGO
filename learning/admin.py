@@ -33,9 +33,9 @@ class RatingAdmin(admin.ModelAdmin):
     list_display = ['course','student','rating']
 
 #Blog Link
-class BlogLinkAdmin(nested_admin.NestedStackedInline):
+@admin.register(models.BlogLink)
+class BlogLinkAdmin(admin.ModelAdmin):
     list_display = ['id','slider']
-    model = models.BlogLink
 
 #Course Link 
 class CourseLinkAdmin(nested_admin.NestedStackedInline):
@@ -59,7 +59,7 @@ class MessengerLinkAdmin(nested_admin.NestedStackedInline):
 @admin.register(models.Slider)
 class SliderAdmin(nested_admin.NestedModelAdmin):
     list_display = ['title','image']
-    inlines = [CourseLinkAdmin,BlogLinkAdmin,YoutubeLinkAdmin,FacebokLinkAdmin,MessengerLinkAdmin]
+    inlines = [CourseLinkAdmin,YoutubeLinkAdmin,FacebokLinkAdmin,MessengerLinkAdmin]
     
 
 @admin.register(models.Category)
