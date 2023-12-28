@@ -162,8 +162,8 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
     
     @action(detail=False,methods=['GET'],permission_classes=[IsAuthenticated])
     def enrolled_courses(self,request):
-
-        enrolled_courses = models.Course.objects \
+        course_id = request.get('course_id')
+        courses_queryset = models.Course.objects \
          \
             .annotate(
             enroll_students_count=Count('enroll_students',distinct=True),
@@ -186,7 +186,14 @@ class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericV
         .prefetch_related('sections__subsections__video') \
         .prefetch_related('sections__subsections__blog') \
         .prefetch_related('sections__subsections__pdf') \
-        .prefetch_related('sections__subsections__complete_subsections') \
+        .prefetch_related('sections__subsections__complete_subsections')
+        if course_id:
+            course = courses_queryset.get(id=course_id)
+            context = self.get_serializer_context()
+            serialized_course = serializers.EnrollCourseSerializer(course,context=context).data
+            return Response(serialized_course)
+
+        enrolled_courses = courses_queryset \
         .filter(enroll_students__student__user_id=request.user.id,enroll_students__subscribed=True)
         #.filter(id__in=Subquery(models.EnrollStudents.objects.filter(student__user=request.user).values('course_id').distinct()))
         context = self.get_serializer_context()
