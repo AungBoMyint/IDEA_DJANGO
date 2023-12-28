@@ -17,7 +17,7 @@ router.register('reviews',views.ReviewViewSet)
 router.register('ratings',views.RatingViewSet)
 urlpatterns = [
     path('',include(router.urls)),
-    path('ratings/<int:course_id>/',views.rating_list),
+    path('ratings_summary/<int:course_id>/',views.rating_list),
     re_path(r'^password_reset_confirm/(?P<uid>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z_\-]+)/$',
            TemplateView.as_view(template_name="learning/reset_password.html"), name='password_reset_confirm'),
 ]
