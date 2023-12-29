@@ -82,6 +82,7 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
         if self.action == "list":
             return models.Course.objects \
             .annotate(
+            enroll_students_count=Count('enroll_students',distinct=True),
             ratings_avg = Avg('ratings__rating',distinct=True),
             reviews_count = Count('reviews',distinct=True),
             total_subsections = Count('sections__subsections',distinct=True),
