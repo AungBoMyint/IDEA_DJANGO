@@ -241,8 +241,9 @@ class CourseSerializer(serializers.ModelSerializer):
         model = models.Course
         #"is_enrolled","progress", we deleted this.
         fields = ["id","title","image",
-                  "ratings_avg","reviews_count","total_subsections"]
+                  "ratings_avg","reviews_count","total_subsections","enroll_students_count"]
     reviews_count = serializers.IntegerField()
+    enroll_students_count = serializers.IntegerField()
     ratings_avg = serializers.SerializerMethodField(
         method_name="get_ratings",
     )
