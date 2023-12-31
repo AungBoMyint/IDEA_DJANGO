@@ -41,7 +41,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     # 'admin_tools_stats',
     # 'django_nvd3',
-    'jazzmin',
+    #'jazzmin',
     #'admin_argon.apps.AdminArgonConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -105,15 +105,15 @@ WSGI_APPLICATION = 'test_learning.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
     	'OPTIONS': {
         	'read_default_file': '/etc/mysql/my.cnf',
     	},
     }
-} 
-""" DATABASES = {
+}  """
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'learning_app_1',
@@ -122,7 +122,7 @@ DATABASES = {
         'HOST': 'localhost',  # Or the IP address/hostname of your MySQL server
         'PORT': '',           # Default MySQL port is usually 3306
     }
-} """
+}
 
 
 # Password validation
@@ -179,7 +179,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-
     ),
 }
 
@@ -197,6 +196,7 @@ DJOSER = {
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
+   'LOGIN_FIELD': 'email',
 }
 
 CACHES = {
@@ -305,3 +305,4 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": False
 }
 #JAZZMIN_SETTINGS["show_ui_builder"] = True
+AUTH_USER_MODEL = 'learning.CustomUser'  # Replace 'your_app' with the correct app name

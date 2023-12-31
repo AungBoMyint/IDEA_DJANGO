@@ -26,7 +26,12 @@ from django.db.models import Count,Prefetch,Avg
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.admin import TabularInline,StackedInline
 from django.forms.models import BaseInlineFormSet, ModelChoiceField
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
+@admin.register(models.CustomUser)
+class UserAdmin(BaseUserAdmin):
+    list_display = ['email',"first_name","last_name","is_staff","is_active"]
+    ordering = ('email',)
 # Register your models here.
 @admin.register(models.Rating)
 class RatingAdmin(admin.ModelAdmin):

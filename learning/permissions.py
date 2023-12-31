@@ -9,4 +9,9 @@ class IsCurrentUserOrReadOnly(permissions.BasePermission):
         student_id = view.kwargs.get("pk")
         student = get_object_or_404(models.Student,pk=student_id)
         return student.user == request.user
-        
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return (request.user and request.user.is_staff)
