@@ -218,3 +218,11 @@ class BlogLink(models.Model):
 class CompleteSubSection(models.Model):
     subsection = models.ForeignKey(SubSection,on_delete=models.CASCADE,related_name="complete_subsections")
     student = models.ForeignKey(Student,on_delete=models.CASCADE,related_name="complete_subsections")
+
+class Splash(models.Model):
+    image = models.ImageField(upload_to='images/')
+    title = models.CharField(max_length=255,null=True,blank=True)
+    desc = models.TextField(null=True,blank=True)
+
+    def __str__(self) -> str:
+        return self.title
