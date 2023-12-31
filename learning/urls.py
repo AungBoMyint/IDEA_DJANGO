@@ -15,6 +15,7 @@ router.register('enrollment',views.EnrollmentViewSet)
 router.register('complete_subsections',views.CompleteSubSectionViewSet)
 router.register('reviews',views.ReviewViewSet)
 router.register('ratings',views.RatingViewSet)
+router.register('splashs',views.SplashViewSet)
 urlpatterns = [
     path('',include(router.urls)),
     path('ratings_summary/<int:course_id>/',views.rating_list),

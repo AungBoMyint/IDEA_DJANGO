@@ -357,3 +357,7 @@ class RatingViewSet(ModelViewSet ):
         else:
             return {'student_id':0}
 
+class SplashViewSet(ModelViewSet):
+    queryset = models.Splash.objects.all()
+    serializer_class = serializers.SplashSerializer
+    
