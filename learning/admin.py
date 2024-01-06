@@ -26,13 +26,9 @@ from django.db.models import Count,Prefetch,Avg
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.admin import TabularInline,StackedInline
 from django.forms.models import BaseInlineFormSet, ModelChoiceField
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-@admin.register(models.Splash)
-class SplashAdmin(admin.ModelAdmin):
-    list_display = ["title","desc","image_"]
-    @admin.display()
-    def image_(self,splash:models.Splash):
-        return mark_safe(f'<img src = "https://learn-ease.sgp1.digitaloceanspaces.com/api-media/media/public/{splash.image.name}" width = "80" height = "80" style="object-fit: contain;"/>')
+
 # Register your models here.
 @admin.register(models.Rating)
 class RatingAdmin(admin.ModelAdmin):

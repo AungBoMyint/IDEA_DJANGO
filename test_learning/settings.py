@@ -41,7 +41,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     # 'admin_tools_stats',
     # 'django_nvd3',
-    'jazzmin',
+    #'jazzmin',
     #'admin_argon.apps.AdminArgonConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -179,7 +179,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-
     ),
 }
 
@@ -197,6 +196,7 @@ DJOSER = {
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
+   'LOGIN_FIELD': 'email',
 }
 
 CACHES = {
@@ -305,3 +305,4 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": False
 }
 #JAZZMIN_SETTINGS["show_ui_builder"] = True
+AUTH_USER_MODEL = 'learning.CustomUser'  # Replace 'your_app' with the correct app name

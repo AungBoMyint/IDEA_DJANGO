@@ -4,10 +4,52 @@ import pprint
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from djoser.serializers import UserSerializer as BaseUserSerializer,UserCreateSerializer as BaseUserCreateSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class EmailTokenObtainSerializer(TokenObtainSerializer):
+    username_field = User.EMAIL_FIELD
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        if email and password:
+            user = self.user_authentication(email=email, password=password)
+
+            if user:
+                if not user.is_active:
+                    raise serializers.ValidationError('User account is disabled.')
+
+                refresh = self.get_token(user)  # Generate refresh token
+                data = {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                }
+                return data
+            else:
+                raise serializers.ValidationError('Unable to log in with provided credentials.')
+        else:
+            raise serializers.ValidationError('Must include "email" and "password".')
+
+    def user_authentication(self, email, password):
+        user = get_user_model().objects.filter(email=email).first()
+
+        if user and user.check_password(password):
+            return user
+
+        return None
 
 class UserCreateSerializer(BaseUserCreateSerializer):
     class Meta(BaseUserCreateSerializer.Meta):
         fields = ["id","username","email","password","first_name","last_name"]
+
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,7 +93,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category
         fields = ["id","title","image","courses_count"]
-    courses_count = serializers.IntegerField()
+    courses_count = serializers.IntegerField(read_only=True)
 class BlogSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Blog
@@ -235,7 +277,10 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         fields = ["id","enroll_at","enroll_students"]
     id = serializers.IntegerField(read_only=True)
     enroll_students = SimpleEnrollCourseSerializer(many=True)
-
+class OriginalCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Course
+        fields = '__all__'
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
@@ -359,16 +404,22 @@ class DiscountItemSerializer(serializers.ModelSerializer):
         fields = ["id","course","discount"]
     course = SimpleCourseSerializer()
 
+class OriginalDiscountItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DiscountItem
+        fields = ["id","course","discount"]
+
 class DiscountSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Discount
         fields = ["id","title","image","discount_percentage","discount_items"]
-    discount_items = DiscountItemSerializer(many=True)
+    discount_items = DiscountItemSerializer(many=True,read_only=True)
 
 class MessengerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.MessengerLink
         fields = '__all__'
+    
 class FacebookSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.FacebookLink
@@ -382,6 +433,10 @@ class CourseLinkSerializer(serializers.ModelSerializer):
         model = models.CourseLink
         fields = ['course']
     course = SimpleCourseSerializer(many=True)
+class OriginalCourseLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.CourseLink
+        fields = "__all__"
 class BlogLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.BlogLink
@@ -396,6 +451,11 @@ class SliderSerializer(serializers.ModelSerializer):
     youtube = YoutubeSerializer()
     courselink = CourseLinkSerializer()
     blogs = BlogLinkSerializer(many=True)
+
+class OriginalSliderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Slider
+        fields = "__all__"
 
 class CompleteSubSectionSerializer(serializers.ModelSerializer):
     class Meta:

@@ -24,49 +24,43 @@ from rest_framework.decorators import api_view,permission_classes
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from .signals import enrollment as enrollment_signal
+from . import permissions
+from rest_framework_simplejwt.views import TokenObtainPairView,TokenViewBase
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import status
+from rest_framework.response import Response
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class EmailTokenObtainPairView(TokenObtainPairView):
+    serializer_class = serializers.CustomTokenObtainPairSerializer
+
 # Create your views here.
-class CategoryViewSet(ReadOnlyModelViewSet):
+class CategoryViewSet(ModelViewSet):
     queryset = models.Category.objects.annotate(
         courses_count = Count('courses')
     ).all()
     serializer_class = serializers.CategorySerializer
     filter_backends = [DjangoFilterBackend]
+    permission_classes = [permissions.IsAdminOrReadOnly]
 
-    """ @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)  """
-    
 
-# class SubCategoryViewSet(ReadOnlyModelViewSet):
-#     queryset = models.SubCategory.objects.annotate(
-#         topics_count = Count("topics")
-#     ).all()
-#     serializer_class = serializers.SubCategorySerializer
-#     @method_decorator(cache_page(5 * 60))
-#     def dispatch(self, request, *args, **kwargs):
-#         return super().dispatch(request, *args, **kwargs)
-
-# class TopicViewSet(ReadOnlyModelViewSet):
-#     queryset = models.Topic.objects.annotate(
-#         courses_count = Count('courses')
-#     ).all()
-#     serializer_class = serializers.TopicSerializer
-#     @method_decorator(cache_page(5 * 60))
-#     def dispatch(self, request, *args, **kwargs):
-#         return super().dispatch(request, *args, **kwargs)
-
-class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
+class CourseViewSet(ModelViewSet):
     
     serializer_class = serializers.CourseSerializer
     filter_backends = [DjangoFilterBackend,SearchFilter]
     filterset_class = filters.CourseFilter
     search_fields = ["title"]
+    permission_classes = [permissions.IsAdminOrReadOnly]
+    
     
     def get_serializer_class(self):
         if self.action == "retrieve":
             return serializers.DetailCourseSerializer
-        else:
+        elif self.action == "list":
             return serializers.CourseSerializer
+        else:
+            return serializers.OriginalCourseSerializer
     
     #---------------------For Caching-----------
     """ @method_decorator(cache_page(5 * 60))
@@ -117,7 +111,7 @@ class CourseViewSet(RetrieveModelMixin,ListModelMixin,GenericViewSet):
     
         
 
-class DiscountViewSet(ReadOnlyModelViewSet):
+class DiscountViewSet(ModelViewSet):
     queryset = models.Discount.objects \
     .annotate(
         enroll_students_count = Count('discount_items__course__enroll_students')
@@ -126,9 +120,12 @@ class DiscountViewSet(ReadOnlyModelViewSet):
         "discount_items__course__sections"
         ).all()
     serializer_class = serializers.DiscountSerializer
-    """ @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs) """
+    permission_classes = [permissions.IsAdminOrReadOnly]
+
+class DiscountItemsViewSet(ModelViewSet):
+    queryset = models.DiscountItem.objects.all()
+    serializer_class = serializers.OriginalDiscountItemSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
 
 class SubSectionViewSet(ReadOnlyModelViewSet):
     queryset = models.SubSection.objects.prefetch_related("video") \
@@ -136,11 +133,9 @@ class SubSectionViewSet(ReadOnlyModelViewSet):
     .prefetch_related("pdf") \
     .all()
     serializer_class = serializers.SubSectionSerializer
-    """ @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs) """
+    
 
-class SliderViewSet(ReadOnlyModelViewSet):
+class SliderViewSet(ModelViewSet):
     queryset = models.Slider.objects.prefetch_related(
         "messengerlink",
         "courselink__course",
@@ -149,9 +144,32 @@ class SliderViewSet(ReadOnlyModelViewSet):
         "blogs"
     ).all()
     serializer_class = serializers.SliderSerializer
-    """ @method_decorator(cache_page(5 * 60))
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs) """
+    permission_classes = [permissions.IsAdminOrReadOnly]
+    def get_serializer_class(self):
+        if self.action == "list" or self.action == "retrieve":
+            return serializers.SliderSerializer
+        return serializers.OriginalSliderSerializer
+class YoutubeLinkViewSet(ModelViewSet):
+    queryset = models.YoutubeLink.objects.all()
+    serializer_class = serializers.YoutubeSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class FacebookLinkViewSet(ModelViewSet):
+    queryset = models.FacebookLink.objects.all()
+    serializer_class = serializers.FacebookSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class MessengerLinkViewSet(ModelViewSet):
+    queryset = models.MessengerLink.objects.all()
+    serializer_class = serializers.MessengerSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class CourseLinkViewSet(ModelViewSet):
+    queryset = models.CourseLink.objects.all()
+    serializer_class = serializers.OriginalCourseLinkSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class BlogLinkViewSet(ModelViewSet):
+    queryset = models.BlogLink.objects.all()
+    serializer_class = serializers.BlogLinkSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+
 
 class StudentViewSet(ListModelMixin,CreateModelMixin,RetrieveModelMixin,GenericViewSet):
     queryset = models.Student.objects.select_related('user').all()
@@ -261,6 +279,7 @@ class EnrollmentViewSet(CreateModelMixin,UpdateModelMixin,GenericViewSet,Retriev
 
             })
             return Response(data="Success",status=status.HTTP_200_OK)
+
 
 class CompleteSubSectionViewSet(CreateModelMixin,GenericViewSet):
     queryset = models.CompleteSubSection.objects.all()

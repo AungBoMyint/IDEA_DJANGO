@@ -2,11 +2,62 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.html import mark_safe
-from django.conf.global_settings import AUTH_USER_MODEL
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey,GenericRelation
 from ckeditor.fields import RichTextField
 from test_learning.storage_backends import PublicMediaStorage
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        user = self.create_user(email, password=password, **extra_fields)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    EMAIL_FIELD = 'email'  # Set the email field
+    USERNAME_FIELD = 'email'  # Use the email as the unique identifier for authentication
+    # Other fields for your user model
+    email = models.EmailField(unique=True,default='admin@gmail.com')
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    username = models.CharField(max_length=150,blank=True)
+    # Additional fields for your user model
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    objects = CustomUserManager()
+
+    class Meta:
+        default_related_name = 'custom_user'  # Adjust this related name
+
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        related_name='custom_user_permissions'  # Adjust this related name
+    )
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        related_name='custom_user_groups'  # Adjust this related name
+    )
+
 # Create your models here.
 class Category(models.Model):
     image = models.ImageField(upload_to='images/',null=True,storage=PublicMediaStorage())
@@ -46,7 +97,7 @@ class Student(models.Model):
     avatar = models.ImageField(upload_to='images/',null=True)
     membership = models.CharField(choices=MEMBERSHIP_CHOICES,default=BROWN,max_length=1)
     points = models.PositiveIntegerField(null=True)
-    user = models.OneToOneField(AUTH_USER_MODEL,on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     def preview(self):
             return mark_safe('<img src="https://learn-ease.sgp1.digitaloceanspaces.com/api-media/media/public/%s" width="200" height="200" style="object-fit:contain"/>' % (self.avatar.name))
     def __str__(self) -> str:
