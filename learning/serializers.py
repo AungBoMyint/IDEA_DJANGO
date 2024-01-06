@@ -488,9 +488,11 @@ class RatingSerializer(serializers.ModelSerializer):
         fields = ["rating","course","student"]
     student = StudentSerializer(read_only=True)
    
-    
-    
     def create(self, validated_data):
         student_id = self.context.get('student_id')
         instance = models.Rating.objects.create(student_id=student_id,**validated_data)
         return instance
+class SplashSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Splash
+        fields = "__all__"

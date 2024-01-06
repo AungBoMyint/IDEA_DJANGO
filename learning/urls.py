@@ -23,6 +23,7 @@ router.register('enrollment',views.EnrollmentViewSet)
 router.register('complete_subsections',views.CompleteSubSectionViewSet)
 router.register('reviews',views.ReviewViewSet)
 router.register('ratings',views.RatingViewSet)
+router.register('splashs',views.SplashViewSet)
 urlpatterns = [
     path('',include(router.urls)),
     path("token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),

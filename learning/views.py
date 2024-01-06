@@ -279,7 +279,7 @@ class EnrollmentViewSet(CreateModelMixin,UpdateModelMixin,GenericViewSet,Retriev
 
             })
             return Response(data="Success",status=status.HTTP_200_OK)
-            
+
 
 class CompleteSubSectionViewSet(CreateModelMixin,GenericViewSet):
     queryset = models.CompleteSubSection.objects.all()
@@ -366,3 +366,7 @@ class RatingViewSet(ModelViewSet ):
         else:
             return {'student_id':0}
 
+class SplashViewSet(ModelViewSet):
+    queryset = models.Splash.objects.all()
+    serializer_class = serializers.SplashSerializer
+    
