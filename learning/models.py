@@ -91,7 +91,7 @@ class EnrollStudents(models.Model):
     course = models.ForeignKey(Course,on_delete=models.SET_NULL,null=True,related_name="enroll_students")
     subscribed_count = models.IntegerField(default=1,blank=True)
     subscribed = models.BooleanField(default=False)
-    expiration_date = models.DateTimeField(default=timezone.now() + timedelta(days=60),blank=True)
+    expiration_date = models.DateTimeField(default=timezone.now() + timedelta(days=62),blank=True)
     def __str__(self) -> str:
         return self.student.user.first_name + " " + self.student.user.last_name
 
