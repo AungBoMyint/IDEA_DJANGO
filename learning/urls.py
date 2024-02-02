@@ -24,6 +24,15 @@ router.register('complete_subsections',views.CompleteSubSectionViewSet)
 router.register('reviews',views.ReviewViewSet)
 router.register('ratings',views.RatingViewSet)
 router.register('splashs',views.SplashViewSet)
+router.register('sections',views.SectionViewSet)
+router.register('subsections',views.SubSectionViewSet)
+router.register('videos',views.VideoViewSet)
+router.register('blogs',views.BlogViewSet)
+router.register('pdfs',views.PdfViewSet)
+router.register('admin_enrollments',views.AdminEnrollStudentViewSet)
+router.register('admin_students', views.AdminStudentViewSet)
+router.register('admin_ratings',views.AdminRatingViewSet)
+router.register('admin_reviews',views.AdminReviewViewSet)
 urlpatterns = [
     path('',include(router.urls)),
     path("token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),

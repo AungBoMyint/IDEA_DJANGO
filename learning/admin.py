@@ -28,7 +28,7 @@ from django.contrib.admin import TabularInline,StackedInline
 from django.forms.models import BaseInlineFormSet, ModelChoiceField
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-
+admin.site.register(models.CustomUser)
 # Register your models here.
 @admin.register(models.Rating)
 class RatingAdmin(admin.ModelAdmin):

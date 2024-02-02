@@ -60,6 +60,7 @@ class UserSerializer(BaseUserSerializer):
         model = get_user_model()
         fields = ["id","username","email","password","first_name","last_name"]
 
+
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Student
@@ -153,11 +154,25 @@ class EnrollStudentSerializer(serializers.ModelSerializer):
         fields = ["student"]
     student = StudentSerializer()
 
+class AdminEnrollStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.EnrollStudents
+        fields = '__all__'
+
 class SimpleCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
         fields = ["id","title","image"]
     
+
+class AdminGetEnrollStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.EnrollStudents
+        fields = ['student','course','subscribed_count',
+                  'subscribed','expiration_date']
+    student = StudentSerializer()
+    course = SimpleCourseSerializer()
+
 
 class EnrollCourseSerializer(serializers.ModelSerializer):
         class Meta:
@@ -463,6 +478,35 @@ class CompleteSubSectionSerializer(serializers.ModelSerializer):
         fields = ["subsection","student"]
     student = serializers.ReadOnlyField()
 
+class AdminRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Rating
+        fields = '__all__'
+class AdminGetRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Rating
+        fields = ['course','student','rating']
+    course = serializers.SerializerMethodField(method_name='get_course_title')
+    student = serializers.SerializerMethodField(method_name='get_student_name')
+    def get_course_title(self,rating:models.Rating):
+        return rating.course.title
+    def get_student_name(self,rating:models.Rating):
+        return rating.student.user.first_name + " " + rating.student.user.last_name
+class AdminGetReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Review
+        fields = ['review','course','student','date']
+    course = serializers.SerializerMethodField(method_name='get_course_title')
+    student = serializers.SerializerMethodField(method_name='get_student_name')
+    def get_course_title(self,review:models.Review):
+        return review.course.title
+    def get_student_name(self,review:models.Review):
+        return review.student.user.first_name + " " + review.student.user.last_name
+class AdminReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Review
+        fields = '__all__'
+        
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Review
@@ -496,3 +540,41 @@ class SplashSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Splash
         fields = "__all__"
+
+class UploadSectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Section
+        fields = '__all__'
+class UploadSubSectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SubSection
+        fields = '__all__'
+class UploadVideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Video
+        fields = '__all__'
+class UploadPdfSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Pdf
+        fields = '__all__'
+class UploadBlogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Blog
+        fields = '__all__'
+
+class AdminGetStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Student
+        fields = ["avatar","membership","points","user","enrolled_courses"]
+    user = SimpleUserSerializer(read_only=True)
+    enrolled_courses = serializers.SerializerMethodField(method_name="get_enrolled_courses")
+    def get_enrolled_courses(self,student:models.Student):
+        distinct_courses = models.EnrollStudents.objects.filter(student__id=student.id).values('course').distinct()
+        # Count the distinct courses
+        unique_course_count = distinct_courses.count()
+        return unique_course_count
+class AdminUploadStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Student
+        fields = '__all__'
+    

@@ -40,8 +40,10 @@ class CategoryViewSet(ModelViewSet):
     queryset = models.Category.objects.annotate(
         courses_count = Count('courses')
     ).all()
+    
     serializer_class = serializers.CategorySerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["title"]
     permission_classes = [permissions.IsAdminOrReadOnly]
 
 
@@ -120,19 +122,73 @@ class DiscountViewSet(ModelViewSet):
         "discount_items__course__sections"
         ).all()
     serializer_class = serializers.DiscountSerializer
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["title"]
     permission_classes = [permissions.IsAdminOrReadOnly]
 
 class DiscountItemsViewSet(ModelViewSet):
     queryset = models.DiscountItem.objects.all()
     serializer_class = serializers.OriginalDiscountItemSerializer
     permission_classes = [permissions.IsAdminOrReadOnly]
+class AdminEnrollStudentViewSet(ModelViewSet):
+    queryset = models.EnrollStudents.objects.prefetch_related('student').prefetch_related('course').all()
+    serializer_class = serializers.AdminEnrollStudentSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["student__user__email","course__title"]
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.AdminGetEnrollStudentSerializer
+        else:
+            return serializers.AdminEnrollStudentSerializer
+    def create(self, request, *args, **kwargs):
+        #check enroll_students is empty or not
+        course = request.data.get("course")
+        student = request.data.get("student")
 
-class SubSectionViewSet(ReadOnlyModelViewSet):
-    queryset = models.SubSection.objects.prefetch_related("video") \
-    .prefetch_related("blog") \
-    .prefetch_related("pdf") \
-    .all()
-    serializer_class = serializers.SubSectionSerializer
+        student_queryset = models.EnrollStudents.objects.filter(course_id=course,student_id = student)
+        exist = student_queryset.exists()
+        if exist:
+            #mean update
+            subscribed_count = student_queryset.first().subscribed_count + 1
+            student_queryset.update(
+                                    subscribed = True,
+                                    expiration_date = timezone.now() + timedelta(days=62),
+                                    subscribed_count = subscribed_count
+                                )
+        else:
+            #crate
+            enrollment = models.Enrollment.objects.create()
+            models.EnrollStudents.objects.create(
+                            enrollment_id = enrollment.id,
+                            course_id = course,
+                            student_id = student,
+                            subscribed = True,
+                            expiration_date = timezone.now() + timedelta(days=62)
+                        )
+        
+        return Response(data="Success",status=status.HTTP_200_OK)
+        
+class SectionViewSet(ModelViewSet):
+    queryset = models.Section.objects.all()
+    serializer_class = serializers.UploadSectionSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class SubSectionViewSet(ModelViewSet):
+    queryset = models.SubSection.objects.all()
+    serializer_class = serializers.UploadSubSectionSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class VideoViewSet(ModelViewSet):
+    queryset = models.Video.objects.all()
+    serializer_class = serializers.UploadVideoSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class BlogViewSet(ModelViewSet):
+    queryset = models.Blog.objects.all()
+    serializer_class = serializers.UploadBlogSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
+class PdfViewSet(ModelViewSet):
+    queryset = models.Pdf.objects.all()
+    serializer_class = serializers.UploadPdfSerializer
+    permission_classes = [permissions.IsAdminOrReadOnly]
     
 
 class SliderViewSet(ModelViewSet):
@@ -144,6 +200,8 @@ class SliderViewSet(ModelViewSet):
         "blogs"
     ).all()
     serializer_class = serializers.SliderSerializer
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["title"]
     permission_classes = [permissions.IsAdminOrReadOnly]
     def get_serializer_class(self):
         if self.action == "list" or self.action == "retrieve":
@@ -369,4 +427,41 @@ class RatingViewSet(ModelViewSet ):
 class SplashViewSet(ModelViewSet):
     queryset = models.Splash.objects.all()
     serializer_class = serializers.SplashSerializer
+
+class AdminStudentViewSet(ModelViewSet):
+    queryset = models.Student.objects.select_related('user').all()
+    serializer_class = serializers.AdminGetStudentSerializer
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["user__first_name","user__last_name","user__email"]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return serializers.AdminUploadStudentSerializer
+        else:
+            return serializers.AdminGetStudentSerializer
+
+class AdminRatingViewSet(ModelViewSet):
+    queryset = models.Rating.objects \
+                .prefetch_related('student__user') \
+                .prefetch_related('course').all()
+    serializer_class = serializers.AdminRatingSerializer
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["student__user__email","course__title"]
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.AdminGetRatingSerializer
+        else:
+            return serializers.AdminRatingSerializer
     
+class AdminReviewViewSet(ModelViewSet):
+    queryset = models.Review.objects\
+                .prefetch_related('student__user') \
+                .prefetch_related('course').all()
+    serializer_class = serializers.AdminReviewSerializer
+    filter_backends = [DjangoFilterBackend,SearchFilter]
+    search_fields = ["student__user__email","course__title"]
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.AdminGetReviewSerializer
+        else:
+            return serializers.AdminReviewSerializer
