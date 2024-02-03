@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     #'139.59.99.129'
 ]
 
-
+APPEND_SLASH=False
 # Application definition
 
 INSTALLED_APPS = [
