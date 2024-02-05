@@ -300,7 +300,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Course
         #"is_enrolled","progress", we deleted this.
-        fields = ["id","title","image",
+        fields = ["id","title","image","price",
                   "ratings_avg","reviews_count","total_subsections","enroll_students_count"]
     reviews_count = serializers.IntegerField()
     enroll_students_count = serializers.IntegerField()
@@ -324,13 +324,14 @@ class DetailCourseSerializer(serializers.ModelSerializer):
         #we have deleted "is_enrolled","progress",
         fields = ["id","title","image","video","desc","price","discount_price","enroll_students_count",
                   "ratings_avg","reviews_count","total_subsections",
-                  "category","videos","pdfs","blogs",
+                  "category","category_id","featured","videos","pdfs","blogs",
                   #"video_durations","pdf_durations","blog_durations",
                   "total_durations","enroll_students","sections"]
     enroll_students = EnrollStudentSerializer(many=True)
     sections = DetailCourseSectionSerializer(many=True)
     enroll_students_count = serializers.IntegerField()
     category = serializers.CharField()
+    category_id = serializers.IntegerField()
     # video_durations = serializers.FloatField()
     # pdf_durations = serializers.IntegerField()
     # blog_durations = serializers.IntegerField()
@@ -565,7 +566,7 @@ class UploadBlogSerializer(serializers.ModelSerializer):
 class AdminGetStudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Student
-        fields = ["avatar","membership","points","user","enrolled_courses"]
+        fields = ["id","avatar","membership","points","user","enrolled_courses"]
     user = SimpleUserSerializer(read_only=True)
     enrolled_courses = serializers.SerializerMethodField(method_name="get_enrolled_courses")
     def get_enrolled_courses(self,student:models.Student):

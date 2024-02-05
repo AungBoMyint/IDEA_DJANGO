@@ -29,8 +29,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView,TokenViewBase
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import status
 from rest_framework.response import Response
-
+from moviepy.editor import VideoFileClip
+from tempfile import NamedTemporaryFile
+from .forms import BlogLinkForm
+from django.core.files.storage import default_storage
 from rest_framework_simplejwt.views import TokenObtainPairView
+from .core import format_duration,format_duration_minutes,get_pdf_reading_time
 
 class EmailTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
@@ -181,6 +185,34 @@ class VideoViewSet(ModelViewSet):
     queryset = models.Video.objects.all()
     serializer_class = serializers.UploadVideoSerializer
     permission_classes = [permissions.IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["subsection_id"]
+    def perform_create(self, serializer):
+        instance = serializer.save()  # This saves the serializer and the instance
+        self._process_video(instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()  # This saves the changes to the instance
+        self._process_video(instance)
+
+    def _process_video(self, instance):
+        # Calculate duration and save it
+        try:
+            video_path = instance.video_url.name
+            video_file = default_storage.open(video_path)
+            with NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(video_file.read())
+
+            # Use the temporary file path for VideoFileClip
+            clip = VideoFileClip(temp_file.name)
+            duration = clip.duration
+            instance.duration = f'{round(duration)}s' if duration else '0s'  # Handle empty duration
+            instance.save()
+
+            # Delete the temporary file after processing
+            temp_file.close()
+        except Exception as e:
+            print(f"Error processing video for instance {instance.pk}: {e}")
 class BlogViewSet(ModelViewSet):
     queryset = models.Blog.objects.all()
     serializer_class = serializers.UploadBlogSerializer
@@ -189,7 +221,34 @@ class PdfViewSet(ModelViewSet):
     queryset = models.Pdf.objects.all()
     serializer_class = serializers.UploadPdfSerializer
     permission_classes = [permissions.IsAdminOrReadOnly]
-    
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["subsection_id"]
+    def perform_create(self, serializer):
+        instance = serializer.save()  # This saves the serializer and the instance
+        self._process_pdf(instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()  # This saves the changes to the instance
+        self._process_pdf(instance)
+
+    def _process_pdf(self, instance):
+        # Calculate reading time and save it
+        try:
+            pdf_path = instance.pdf_url.name
+            pdf_file = default_storage.open(pdf_path)
+            with NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(pdf_file.read())
+            
+            # Use the temporary file path to calculate reading time
+            instance.duration = get_pdf_reading_time(temp_file.name)
+            instance.save()
+
+            # Ensure the temporary file is closed and deleted
+            temp_file.close()
+        except Exception as e:
+            print(f"Error processing PDF for instance {instance.pk}: {e}")
+
+   
 
 class SliderViewSet(ModelViewSet):
     queryset = models.Slider.objects.prefetch_related(
