@@ -447,7 +447,7 @@ class YoutubeSerializer(serializers.ModelSerializer):
 class CourseLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CourseLink
-        fields = ['course']
+        fields = ["id",'course']
     course = SimpleCourseSerializer(many=True)
 class OriginalCourseLinkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -486,7 +486,7 @@ class AdminRatingSerializer(serializers.ModelSerializer):
 class AdminGetRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Rating
-        fields = ['course','student','rating']
+        fields = ["id",'course','student','rating']
     course = serializers.SerializerMethodField(method_name='get_course_title')
     student = serializers.SerializerMethodField(method_name='get_student_name')
     def get_course_title(self,rating:models.Rating):
@@ -496,7 +496,7 @@ class AdminGetRatingSerializer(serializers.ModelSerializer):
 class AdminGetReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Review
-        fields = ['review','course','student','date']
+        fields = ["id",'review','course','student','date']
     course = serializers.SerializerMethodField(method_name='get_course_title')
     student = serializers.SerializerMethodField(method_name='get_student_name')
     def get_course_title(self,review:models.Review):
