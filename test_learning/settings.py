@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     '192.168.1.2',
     '127.0.0.1',
     '10.0.2.2',
+    'kznidea.online',
     #'139.59.99.129'
 ]
 
@@ -105,15 +106,15 @@ WSGI_APPLICATION = 'test_learning.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
     	'OPTIONS': {
         	'read_default_file': '/etc/mysql/my.cnf',
     	},
     }
-} 
-""" DATABASES = {
+}  """
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'learning_app_1',
@@ -122,7 +123,7 @@ DATABASES = {
         'HOST': 'localhost',  # Or the IP address/hostname of your MySQL server
         'PORT': '',           # Default MySQL port is usually 3306
     }
-} """
+}
 
 
 # Password validation
@@ -195,7 +196,7 @@ DJOSER = {
 
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
+   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
    'LOGIN_FIELD': 'email',
 }
 
